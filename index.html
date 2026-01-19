@@ -5,7 +5,6 @@
 <title>Patchbay Mission Control Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
         tailwind.config = {
@@ -62,7 +61,7 @@
 <span class="text-xs font-mono text-gray-300">SYSTEM ONLINE</span>
 </div>
 <div class="flex items-center gap-4">
-<button class="text-gray-400 hover:text-white transition-colors">
+<button id="settings-button" class="text-gray-400 hover:text-white transition-colors">
 <span class="material-symbols-outlined">settings</span>
 </button>
 <div class="size-8 rounded-full bg-cover bg-center border border-border-dark" data-alt="User profile avatar gradient" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAKMLTdlZsO0EwFkGgqusAU6KR1mMw97o3UU6ZMr8dQBBOKffm5apm3c2s4X1wkI30SM1_f6E4mUejHE6j7dLpwMsz6lOgM8nAYrHFWI_2V7ikRhBcciU6I3RWO9jaXSW5ZZrJaI0OSZN15m3ctDRfjT1qJxyiUche9s3qlxeXgHGyRwSD9F0B0f7StL6hwAs0mm9_ONh4orkwJZ4CsxrC0Wx4WqGwKxC-Sw38PGulK1VHha2DHGtKA_5tRYsK2QXsywiUvE0ltQ');"></div>
@@ -82,151 +81,21 @@
 </button>
 </div>
 </div>
-<div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-<!-- Agent Card 1 -->
-<div class="group flex flex-col gap-2 p-3 rounded bg-surface-darker border border-primary/30 hover:border-primary/60 transition-colors">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="size-2 rounded-full bg-status-green shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
-<span class="font-bold text-sm">GPT-4 Turbo</span>
-</div>
-<span class="material-symbols-outlined text-primary cursor-pointer" style="font-size: 24px;">toggle_on</span>
-</div>
-<div class="flex justify-between items-center text-[10px] font-mono text-gray-500">
-<span class="bg-[#1e293b] px-1.5 py-0.5 rounded text-gray-300">API MODE</span>
-<span>8k ctx</span>
-</div>
-</div>
-<!-- Agent Card 2 -->
-<div class="group flex flex-col gap-2 p-3 rounded bg-surface-darker border border-border-dark hover:border-primary/40 transition-colors">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="size-2 rounded-full bg-status-orange shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
-<span class="font-bold text-sm">Gemini Ultra</span>
-</div>
-<span class="material-symbols-outlined text-primary cursor-pointer" style="font-size: 24px;">toggle_on</span>
-</div>
-<div class="flex justify-between items-center text-[10px] font-mono text-gray-500">
-<span class="bg-[#2a1b0e] px-1.5 py-0.5 rounded text-status-orange">WEB MODE</span>
-<span>32k ctx</span>
-</div>
-</div>
-<!-- Agent Card 3 -->
-<div class="group flex flex-col gap-2 p-3 rounded bg-surface-darker border border-border-dark opacity-60 hover:opacity-100 transition-opacity">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="size-2 rounded-full bg-gray-600"></span>
-<span class="font-bold text-sm text-gray-400">Claude 3 Opus</span>
-</div>
-<span class="material-symbols-outlined text-gray-600 cursor-pointer" style="font-size: 24px;">toggle_off</span>
-</div>
-<div class="flex justify-between items-center text-[10px] font-mono text-gray-600">
-<span class="bg-[#1e293b] px-1.5 py-0.5 rounded">API MODE</span>
-<span>200k ctx</span>
-</div>
-</div>
-<!-- Agent Card 4 -->
-<div class="group flex flex-col gap-2 p-3 rounded bg-surface-darker border border-border-dark opacity-60 hover:opacity-100 transition-opacity">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="size-2 rounded-full bg-gray-600"></span>
-<span class="font-bold text-sm text-gray-400">Mistral Large</span>
-</div>
-<span class="material-symbols-outlined text-gray-600 cursor-pointer" style="font-size: 24px;">toggle_off</span>
-</div>
-<div class="flex justify-between items-center text-[10px] font-mono text-gray-600">
-<span class="bg-[#1e293b] px-1.5 py-0.5 rounded">LOCAL</span>
-<span>32k ctx</span>
-</div>
-</div>
+<div id="agent-list" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+    <!-- Dynamic Content -->
 </div>
 </aside>
 <!-- CENTER PANE: The Stage -->
 <section class="flex-1 flex flex-col min-w-0 bg-[#0f1214] relative">
-<!-- Orchestra View (Split Screen) -->
-<div class="flex-1 flex overflow-hidden">
-<!-- Left Split: GPT-4 -->
-<div class="flex-1 flex flex-col border-r border-border-dark">
-<div class="h-10 flex items-center justify-between px-4 bg-[#18181b] border-b border-border-dark">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-gray-400 text-sm">smart_toy</span>
-<span class="text-xs font-bold font-mono text-gray-200">GPT-4 TURBO</span>
-</div>
-<span class="size-1.5 rounded-full bg-status-green"></span>
-</div>
-<div class="flex-1 overflow-y-auto p-4 space-y-6">
-<!-- User Message -->
-<div class="flex gap-3 justify-end">
-<div class="bg-surface-dark border border-border-dark rounded-lg rounded-tr-none px-4 py-3 max-w-[85%]">
-<p class="text-sm text-gray-300 leading-relaxed">Can you write a Python function to detect memory leaks using tracemalloc?</p>
-</div>
-<div class="size-8 rounded bg-gradient-to-br from-primary to-blue-700 shrink-0" data-alt="User avatar blue gradient"></div>
-</div>
-<!-- AI Message -->
-<div class="flex gap-3">
-<div class="size-8 rounded bg-green-900/30 border border-green-500/30 flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-green-500 text-sm">code</span>
-</div>
-<div class="flex-1 space-y-2">
-<div class="text-xs text-status-green font-mono mb-1">GPT-4 TURBO (API)</div>
-<div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full">
-<p class="text-sm text-gray-300 mb-3">Certainly. Here is a robust implementation using `tracemalloc` to snapshot memory usage.</p>
-<div class="bg-[#09090b] rounded border border-border-dark p-3 font-mono text-xs text-gray-400 overflow-x-auto">
-<pre><code>import tracemalloc
-
-def check_memory():
-    tracemalloc.start()
-    # ... code to profile ...
-    snapshot = tracemalloc.take_snapshot()
-    top_stats = snapshot.statistics('lineno')
-
-    print("[ Top 10 ]")
-    for stat in top_stats[:10]:
-        print(stat)</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Right Split: Gemini -->
-<div class="flex-1 flex flex-col">
-<div class="h-10 flex items-center justify-between px-4 bg-[#18181b] border-b border-border-dark">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-gray-400 text-sm">language</span>
-<span class="text-xs font-bold font-mono text-gray-200">GEMINI ULTRA</span>
-</div>
-<span class="size-1.5 rounded-full bg-status-orange"></span>
-</div>
-<div class="flex-1 overflow-y-auto p-4 space-y-6 bg-[#0f1214]">
-<!-- User Message -->
-<div class="flex gap-3 justify-end">
-<div class="bg-surface-dark border border-border-dark rounded-lg rounded-tr-none px-4 py-3 max-w-[85%]">
-<p class="text-sm text-gray-300 leading-relaxed">Explain memory leaks like I'm 5 years old.</p>
-</div>
-<div class="size-8 rounded bg-gradient-to-br from-primary to-blue-700 shrink-0" data-alt="User avatar blue gradient"></div>
-</div>
-<!-- AI Message -->
-<div class="flex gap-3">
-<div class="size-8 rounded bg-orange-900/30 border border-orange-500/30 flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-status-orange text-sm">auto_awesome</span>
-</div>
-<div class="flex-1 space-y-2">
-<div class="text-xs text-status-orange font-mono mb-1">GEMINI (WEB)</div>
-<div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full">
-<p class="text-sm text-gray-300 leading-relaxed">
-                                       Imagine you have a toy box (computer memory). <br/><br/>
-                                       Usually, when you're done playing with a toy, you put it back on the shelf so there's room for new toys. <br/><br/>
-                                       A <strong>memory leak</strong> is when you take toys out but forget to put them back. Eventually, the toy box gets so full you can't fit anything else in it, and you can't play anymore!
-                                   </p>
-<div class="mt-3 flex gap-2">
-<span class="text-[10px] font-mono text-gray-500 px-2 py-1 bg-surface-dark rounded border border-border-dark">Source: web search</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
+<!-- Orchestra View (Single Stream for Phase 1) -->
+<div class="flex-1 flex overflow-hidden bg-[#0f1214] relative">
+    <div id="message-container" class="flex-1 overflow-y-auto p-4 space-y-6">
+        <!-- Dynamic messages -->
+        <div class="flex flex-col items-center justify-center h-full text-gray-500 opacity-50">
+            <span class="material-symbols-outlined text-6xl mb-4">terminal</span>
+            <p>Select an agent and start typing...</p>
+        </div>
+    </div>
 </div>
 <!-- Command Deck (Footer) -->
 <div class="h-48 bg-[#18181b] border-t border-border-dark p-4 shrink-0 flex flex-col gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-20">
@@ -241,12 +110,12 @@ def check_memory():
 </label>
 </div>
 <div class="relative flex-1">
-<textarea class="w-full h-full bg-surface-darker border border-border-dark rounded-lg p-3 pr-24 font-mono text-sm text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary resize-none outline-none scrollbar-thin" placeholder="Enter system prompt or user query here... Use / for commands"></textarea>
+<textarea id="user-input" class="w-full h-full bg-surface-darker border border-border-dark rounded-lg p-3 pr-24 font-mono text-sm text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary resize-none outline-none scrollbar-thin" placeholder="Enter system prompt or user query here..."></textarea>
 <div class="absolute bottom-3 right-3 flex items-center gap-2">
-<span class="text-[10px] text-gray-600 font-mono">342 chars</span>
-<button class="flex items-center gap-2 bg-primary hover:bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg shadow-primary/20 transition-all active:scale-95">
+<span class="text-[10px] text-gray-600 font-mono">0 chars</span>
+<button id="send-button" class="flex items-center gap-2 bg-primary hover:bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg shadow-primary/20 transition-all active:scale-95">
 <span class="font-bold text-sm">SEND</span>
-<span class="text-[10px] bg-black/20 px-1.5 py-0.5 rounded font-mono">~$0.02</span>
+<span class="text-[10px] bg-black/20 px-1.5 py-0.5 rounded font-mono">~$0.00</span>
 </button>
 </div>
 </div>
@@ -265,8 +134,7 @@ def check_memory():
 <span class="material-symbols-outlined text-sm">edit_note</span>
                         Context Scratchpad
                     </label>
-<textarea class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later...">Context: You are a senior Python engineer debugging a memory leak in a production environment. The server has 16GB RAM.
-                    </textarea>
+<textarea class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later..."></textarea>
 </div>
 <div class="h-px bg-border-dark w-full"></div>
 <!-- Pipe Actions -->
@@ -290,27 +158,10 @@ def check_memory():
 </div>
 <span class="material-symbols-outlined text-gray-600 group-hover:text-status-orange" style="font-size: 18px;">arrow_forward</span>
 </button>
-<button class="flex items-center justify-between p-2 rounded bg-surface-dark border border-border-dark hover:border-gray-500 hover:bg-[#2e2e33] transition-all group text-left opacity-70">
-<div class="flex flex-col">
-<span class="text-xs font-bold text-gray-200">Save to Library</span>
-<span class="text-[10px] text-gray-500">Store context for later</span>
-</div>
-<span class="material-symbols-outlined text-gray-600 group-hover:text-white" style="font-size: 18px;">save</span>
-</button>
-</div>
-<!-- Variable Watch (Mockup) -->
-<div class="mt-auto bg-[#121212] rounded border border-border-dark p-2">
-<div class="text-[10px] font-mono text-gray-500 mb-2 uppercase border-b border-border-dark pb-1">Token Budget</div>
-<div class="flex justify-between items-center text-xs font-mono mb-1">
-<span class="text-gray-400">Total</span>
-<span class="text-white">1,240 / 8k</span>
-</div>
-<div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-<div class="bg-primary h-full w-[15%]"></div>
-</div>
 </div>
 </div>
 </div>
 </aside>
 </main>
+<script type="module" src="/src/main.js"></script>
 </body></html>
