@@ -20,6 +20,19 @@ AI independently, abstracting over inconsistent interfaces to provide a unified 
 2. **API Mode (Direct):** Connects to official APIs using user-provided keys. This mode is preferred for speed,
    stability, automation, and leveraging Context Caching.
 
+### 1.2 Conceptual Model: Why "Patchbay"?
+
+While the user interface resembles a modern group chat (e.g., Slack, Discord), the core mechanic remains that of a *
+*Control Plane**.
+
+* **The Room (Bus):** The unified chat history acts as the main signal bus. All agents share this context, allowing them
+  to "hear" each other.
+* **The Operator (User):** You are not just a participant; you are the engineer.
+* **The Patch Cables (@Targeting):** By using `@AgentName`, you dynamically route the signal (context/prompt) to
+  specific processors (AI models). You decide who processes the signal and when.
+* **The Processors (Agents):** Each AI model is a specialized unit—one for coding, one for creative writing, one for
+  research. You patch them into the signal flow as needed.
+
 ### 1.1 Problem Statement
 
 * **Siloed Intelligence:** Lack of interoperability between models.
@@ -99,7 +112,7 @@ interface AIProvider {
 {
   "chatgpt": {
     "mode": "API",
-    "apiKey": "sk-...",
+    "apiKey": "sk-…",
     "model": "gpt-5"
   },
   "gemini": {
