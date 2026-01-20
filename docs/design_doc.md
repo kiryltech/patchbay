@@ -9,22 +9,17 @@
 
 ## 1. Overview
 
-The **AI Orchestrator** is a privacy-first, local-only tool that enables simultaneous collaboration between multiple AI
-models.
+The **AI Orchestrator** is a privacy-first, local-only tool that enables simultaneous collaboration between multiple AI models.
 
-**v2.0 Update:** This system now supports a **Hybrid Provider Model**. Users can choose the integration method for each
-AI independently, abstracting over inconsistent interfaces to provide a unified control plane.
+**v2.0 Update:** This system now supports a **Hybrid Provider Model**. Users can choose the integration method for each AI independently, abstracting over inconsistent interfaces to provide a unified control plane.
 
-1. **Web Mode (UI Automation):** Controls existing web sessions via Chrome Extension. This mode is strictly used to
-   access capabilities currently unique to consumer UIs (e.g., Deep Research, Canvas/Artifacts rendering).
-2. **API Mode (Direct):** Connects to official APIs using user-provided keys. This mode is preferred for speed,
-   stability, automation, and leveraging Context Caching.
+1. **Web Mode (UI Automation):** Controls existing web sessions via Chrome Extension. This mode is strictly used to access capabilities currently unique to consumer UIs (e.g., Deep Research, Canvas/Artifacts rendering).
+2. **API Mode (Direct):** Connects to official APIs using user-provided keys. This mode is preferred for speed, stability, automation, and leveraging Context Caching.
 
 ### 1.1 Problem Statement
 
 * **Siloed Intelligence:** Lack of interoperability between models.
-* **Capability Gap:** Web UIs offer unique features (Deep Research, Canvas) but lack automation. APIs offer automation
-  but lack these specific UI capabilities.
+* **Capability Gap:** Web UIs offer unique features (Deep Research, Canvas) but lack automation. APIs offer automation but lack these specific UI capabilities.
 * **Solution:** A unified control plane that abstracts the underlying connection method (Web vs. API).
 
 ## 2. Goals & Non-Goals
@@ -32,15 +27,13 @@ AI independently, abstracting over inconsistent interfaces to provide a unified 
 ### 2.1 Goals
 
 * **Swappable Backends:** Switch between Web and API modes instantly without losing UI state.
-* **Hybrid Workflows:** E.g., Use Gemini via **Web** (for Deep Research) -> Pipe result to ChatGPT via **API** (for Code
-  Review).
+* **Hybrid Workflows:** E.g., Use Gemini via **Web** (for Deep Research) -> Pipe result to ChatGPT via **API** (for Code Review).
 * **Zero-Backend (Production):** The final orchestration logic resides entirely in the client-side Control Center.
 * **Privacy:** API Keys are stored locally. No intermediate servers in the final build.
 
 ### 2.2 Non-Goals
 
-* **API Proxying (Production):** We will not ship a local proxy server to hide API keys. Keys are used directly from the
-  client (via Extension transport). A temporary proxy is permitted strictly for Phase 1 development.
+* **API Proxying (Production):** We will not ship a local proxy server to hide API keys. Keys are used directly from the client (via Extension transport). A temporary proxy is permitted strictly for Phase 1 development.
 
 ## 3. System Architecture
 
@@ -70,7 +63,7 @@ graph TD
     end
 
     subgraph "External Systems"
-        WebAdpt -->|chrome . runtime| Ext[Chrome Extension]
+        WebAdpt -->|chrome.runtime| Ext[Chrome Extension]
         Ext -->|Inject| DOM[Browser Tabs]
         ApiAdpt -->|Fetch| Cloud[OpenAI / Gemini Cloud APIs]
     end
@@ -88,7 +81,6 @@ To support swappability, the UI will not call specific logic directly. Instead, 
 interface AIProvider {
     id: string; // 'chatgpt' | 'gemini'
     sendPrompt(text: string, history?: Message[]): Promise<string>;
-
     getStatus(): Promise<'READY' | 'ERROR' | 'MISSING_KEY'>;
 }
 ```
@@ -115,8 +107,7 @@ interface AIProvider {
 
 * **Protocol:** `chrome.runtime.sendMessage` (enabled via `"externally_connectable"` in `manifest.json`).
 * **Responsibility:** Formats the prompt into a payload the Extension understands.
-* **Nature:** Operates entirely through standard browser interaction mechanisms, similar to accessibility tools and user
-  automation.
+* **Nature:** Operates entirely through standard browser interaction mechanisms, similar to accessibility tools and user automation.
 * **Pros:** Access to "Pro" UI features (Deep Research, Canvas).
 * **Cons:** Inherently fragile due to DOM changes; slower latency.
 
@@ -125,19 +116,15 @@ interface AIProvider {
 * **Protocol:** fetch() (REST)
 * **Responsibility:** Manages message history array, handles Context Caching headers, parses JSON responses.
 * **CORS Handling (Strategy):**
-    * *Development (Phase 1-2):* Uses a lightweight local proxy (e.g., Node.js dev server) to bypass browser CORS
-      restrictions during initial development.
-    * *Production (Phase 3):* Swaps the transport layer to utilize the **Chrome Extension Background Worker**. This
-      removes the need for the proxy, achieving the "Zero-Backend" goal by delegating network requests to the extension
-      context.
+    * *Development (Phase 1-2):* Uses a lightweight local proxy (e.g., Node.js dev server) to bypass browser CORS restrictions during initial development.
+    * *Production (Phase 3):* Swaps the transport layer to utilize the **Chrome Extension Background Worker**. This removes the need for the proxy, achieving the "Zero-Backend" goal by delegating network requests to the extension context.
 
 ### 4.3 Extension Background Service (Updated)
 
 The service worker now has **two** responsibilities:
 
 1. **Router:** Routing messages to Content Scripts (Web Mode).
-2. **API Transport:** Acting as a user-initiated fetch relay for API calls (API Mode). This is a stateless transport
-   layer; it does not cache or inspect payloads.
+2. **API Transport:** Acting as a user-initiated fetch relay for API calls (API Mode). This is a stateless transport layer; it does not cache or inspect payloads.
 
 ## 5. Data Flow (Hybrid Scenario)
 
@@ -159,20 +146,15 @@ The service worker now has **two** responsibilities:
     * Adapter sends payload to Extension Background (as Transport).
     * Extension calls https://api.openai.com/v1/chat/completions.
     * Result returned as JSON.
-    * **Value:** Efficient "Pay-per-task" execution for the summary, while leveraging the high-value "Deep Research"
-      capability from the existing web subscription.
+    * **Value:** Efficient "Pay-per-task" execution for the summary, while leveraging the high-value "Deep Research" capability from the existing web subscription.
 
 ## 6. Security & Privacy
 
 * **Key Storage:**
-    * **Primary:** localStorage (scoped to localhost origin). Keys are accessible only to scripts running on the Control
-      Center page.
-    * **Alternative:** chrome.storage.local (scoped to Extension). This offers better isolation but requires a
-      message-passing flow to retrieve keys. For v1, localStorage is sufficient for a local dev tool, provided the user
-      trusts their own localhost environment.
+    * **Primary:** localStorage (scoped to localhost origin). Keys are accessible only to scripts running on the Control Center page.
+    * **Alternative:** chrome.storage.local (scoped to Extension). This offers better isolation but requires a message-passing flow to retrieve keys. For v1, localStorage is sufficient for a local dev tool, provided the user trusts their own localhost environment.
 * **Least Privilege:**
-    * The Extension's host_permissions are strictly scoped to the AI providers (https://api.openai.com/
-      *, https://generativelanguage.googleapis.com/*) to allow the Transport layer to function.
+    * The Extension's host_permissions are strictly scoped to the AI providers (https://api.openai.com/*, https://generativelanguage.googleapis.com/*) to allow the Transport layer to function.
 
 ## 7. Implementation Roadmap
 
@@ -196,3 +178,9 @@ The service worker now has **two** responsibilities:
 * **Transport Layer:** Implement "CORS Transport" in background script to replace the dev proxy.
 * **Web Mode:** Develop `WebAdapter` for DOM injection/automation of external Chat UIs.
 * **Hybrid:** Enable switching between API and Web modes.
+
+### Phase 4: Analytics & Optimization (Future)
+
+* **Usage Tracking:** Track token usage, request counts, and estimated costs per provider.
+* **Performance:** Monitor API latency and response times.
+* **Optimization:** Tools for prompt engineering and cost reduction.
