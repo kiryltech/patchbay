@@ -105,7 +105,7 @@
 <span class="text-xs font-bold text-gray-300 uppercase tracking-widest">Command Deck</span>
 </div>
 <label class="flex items-center gap-2 cursor-pointer select-none group">
-<input checked="" class="form-checkbox bg-surface-darker border-gray-600 rounded text-primary focus:ring-0 focus:ring-offset-0 size-4" type="checkbox"/>
+<input id="broadcast-toggle" checked="" class="form-checkbox bg-surface-darker border-gray-600 rounded text-primary focus:ring-0 focus:ring-offset-0 size-4" type="checkbox"/>
 <span class="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">BROADCAST TO ALL</span>
 </label>
 </div>
@@ -134,7 +134,7 @@
 <span class="material-symbols-outlined text-sm">edit_note</span>
                         Context Scratchpad
                     </label>
-<textarea class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later..."></textarea>
+<textarea id="scratchpad" class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later..."></textarea>
 </div>
 <div class="h-px bg-border-dark w-full"></div>
 <!-- Pipe Actions -->
@@ -143,7 +143,7 @@
 <span class="material-symbols-outlined text-sm">output</span>
                         Pipe Actions
                     </label>
-<div class="grid gap-2">
+<div id="pipe-actions-container" class="grid gap-2">
 <button class="flex items-center justify-between p-2 rounded bg-surface-dark border border-border-dark hover:border-gray-500 hover:bg-[#2e2e33] transition-all group text-left">
 <div class="flex flex-col">
 <span class="text-xs font-bold text-gray-200">Pipe to GPT-4</span>
