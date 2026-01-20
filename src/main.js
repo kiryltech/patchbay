@@ -49,10 +49,20 @@ const gemini3Flash = new ApiAdapter({
     getApiKey: () => settingsUI.getGeminiKey()
 });
 
+const gemma3 = new ApiAdapter({
+    id: 'google-gemma-3-27b',
+    name: 'Gemma 3 27B',
+    type: 'gemini',
+    endpoint: 'http://localhost:3000/api/google',
+    model: 'gemma-3-27b-it',
+    getApiKey: () => settingsUI.getGeminiKey()
+});
+
 orchestrator.registerProvider(gpt5Pro);
 orchestrator.registerProvider(gpt5Mini);
 orchestrator.registerProvider(gemini3Pro);
 orchestrator.registerProvider(gemini3Flash);
+orchestrator.registerProvider(gemma3);
 
 // Set default if not set
 orchestrator.setActiveProviders(['google-gemini-3-flash']);
