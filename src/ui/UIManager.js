@@ -13,6 +13,8 @@ export class UIManager {
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
+        this.selectedIndex = -1;
+        this.currentSuggestions = [];
     }
 
     init() {
@@ -24,21 +26,44 @@ export class UIManager {
 
     bindEvents() {
         this.sendButton.addEventListener('click', () => this.handleSend());
-        this.inputElement.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.handleSend();
-            }
-        });
+        
+        // Keydown for navigation and sending
+        this.inputElement.addEventListener('keydown', (e) => this.handleKeydown(e));
 
         this.inputElement.addEventListener('input', () => this.handleAutocomplete());
 
         // Hide autocomplete when clicking outside
         document.addEventListener('click', (e) => {
             if (!this.inputElement.contains(e.target) && !this.autocompletePopup.contains(e.target)) {
-                this.autocompletePopup.classList.add('hidden');
+                this.closeAutocomplete();
             }
         });
+    }
+
+    handleKeydown(e) {
+        if (!this.autocompletePopup.classList.contains('hidden')) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.selectedIndex = (this.selectedIndex + 1) % this.currentSuggestions.length;
+                this.renderAutocomplete(this.currentSuggestions, this.currentMatchText);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.selectedIndex = (this.selectedIndex - 1 + this.currentSuggestions.length) % this.currentSuggestions.length;
+                this.renderAutocomplete(this.currentSuggestions, this.currentMatchText);
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                if (this.selectedIndex >= 0 && this.selectedIndex < this.currentSuggestions.length) {
+                    this.selectSuggestion(this.currentSuggestions[this.selectedIndex].name, this.currentMatchText);
+                }
+            } else if (e.key === 'Escape') {
+                this.closeAutocomplete();
+            }
+        } else {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.handleSend();
+            }
+        }
     }
 
     initializeAgentVisuals() {
@@ -66,16 +91,20 @@ export class UIManager {
         if (targets.includes('@all') || targets.includes('@everyone')) {
             targetIds = this.orchestrator.getActiveProviders().map(p => p.id);
         } else if (targets.length > 0) {
-            const providerNames = this.orchestrator.getProviders().map(p => p.name.toLowerCase());
-            const matchedTargets = targets
-                .map(target => target.substring(1).toLowerCase()) // remove '@'
-                .filter(targetName => providerNames.includes(targetName));
-
+            // Robust matching: Check if normalized provider name contains the normalized target
             targetIds = this.orchestrator.getProviders()
-                .filter(p => matchedTargets.includes(p.name.toLowerCase()))
+                .filter(p => {
+                    const pNameNormalized = p.name.toLowerCase().replace(/\s+/g, '');
+                    return targets.some(t => {
+                        const targetNameNormalized = t.substring(1).toLowerCase().replace(/\s+/g, ''); // remove @ and spaces
+                        return pNameNormalized.includes(targetNameNormalized) || targetNameNormalized.includes(pNameNormalized);
+                    });
+                })
                 .map(p => p.id);
         }
-        // If no targets, targetIds remains empty, implementing "Passive by Default"
+        
+        // "Passive by Default" - if targetIds is empty, we do nothing (just saved to history)
+        if (targetIds.length === 0) return;
 
         // Show typing indicators for all targeted agents
         targetIds.forEach(id => this.showTypingIndicator(id));
@@ -92,11 +121,97 @@ export class UIManager {
     }
 
     parseInput(text) {
-        const mentionRegex = /@([\w\s-]+|all|everyone)/g;
+        // Regex to capture @Agent Name (handling spaces if needed, though simple syntax preferred)
+        const mentionRegex = /@([a-zA-Z0-9.\-_]+|"[^"]+")/g; 
         const matches = text.match(mentionRegex) || [];
-        const targets = matches.map(m => m.toLowerCase());
+        const targets = matches.map(m => m.replace(/"/g, '').toLowerCase());
         const cleanText = text.replace(mentionRegex, '').trim();
         return { targets, cleanText };
+    }
+
+    handleAutocomplete() {
+        const cursorPosition = this.inputElement.selectionStart;
+        const textBeforeCursor = this.inputElement.value.substring(0, cursorPosition);
+        const match = textBeforeCursor.match(/@(\w*)$/);
+
+        if (match) {
+            const query = match[1].toLowerCase();
+            const providers = this.orchestrator.getProviders();
+            const suggestions = [
+                { name: 'all', type: 'alias' },
+                { name: 'everyone', type: 'alias' },
+                ...providers.map(p => ({ name: p.name.replace(/\s+/g, ''), type: 'agent', id: p.id, displayName: p.name }))
+            ];
+
+            const filtered = suggestions.filter(s => s.name.toLowerCase().startsWith(query));
+
+            if (filtered.length > 0) {
+                this.currentSuggestions = filtered;
+                this.currentMatchText = match[0];
+                if (this.selectedIndex === -1) this.selectedIndex = 0;
+                this.renderAutocomplete(filtered, match[0]);
+                this.autocompletePopup.classList.remove('hidden');
+            } else {
+                this.closeAutocomplete();
+            }
+        } else {
+            this.closeAutocomplete();
+        }
+    }
+
+    closeAutocomplete() {
+        this.autocompletePopup.classList.add('hidden');
+        this.selectedIndex = -1;
+        this.currentSuggestions = [];
+    }
+
+    renderAutocomplete(suggestions, matchText) {
+        this.autocompletePopup.innerHTML = '';
+        const list = document.createElement('div');
+        list.className = 'py-1';
+
+        suggestions.forEach((suggestion, index) => {
+            const item = document.createElement('div');
+            const isSelected = index === this.selectedIndex;
+            item.className = `px-4 py-2 cursor-pointer flex items-center gap-2 transition-colors ${isSelected ? 'bg-primary/20 text-white' : 'hover:bg-[#27272a] text-gray-200'}`;
+            
+            let icon = 'alternate_email';
+            let color = '#9ca3af'; // gray-400
+
+            if (suggestion.type === 'agent') {
+                const visuals = this.agentVisuals.get(suggestion.id);
+                if (visuals) {
+                    icon = visuals.icon;
+                    color = visuals.color;
+                }
+            }
+
+            item.innerHTML = `
+                <span class="material-symbols-outlined text-sm" style="color: ${color};">${icon}</span>
+                <span class="text-sm">${suggestion.displayName || suggestion.name}</span>
+                ${suggestion.type === 'alias' ? '<span class="text-[10px] text-gray-500 ml-auto font-mono">BROADCAST</span>' : ''}
+            `;
+
+            item.addEventListener('click', () => {
+                this.selectSuggestion(suggestion.name, matchText);
+            });
+
+            list.appendChild(item);
+        });
+
+        this.autocompletePopup.appendChild(list);
+    }
+
+    selectSuggestion(name, matchText) {
+        const cursorPosition = this.inputElement.selectionStart;
+        const text = this.inputElement.value;
+        const newText = text.substring(0, cursorPosition - matchText.length) + 
+                       `@${name} ` + 
+                       text.substring(cursorPosition);
+        
+        this.inputElement.value = newText;
+        this.closeAutocomplete();
+        this.inputElement.focus();
     }
 
     showTypingIndicator(providerId) {
