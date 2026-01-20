@@ -50,6 +50,7 @@ The dashboard will be available at `http://localhost:5173` (or the port specifie
 ## 🗺 Implementation Roadmap
 
 - **Phase 1 (Completed):** API-First Core. Basic dashboard, API adapters, and secure key storage.
-- **Phase 2 (In Progress):** Advanced Orchestration. Message history, multi-model broadcasting, and the "Pipe" workflow.
-- **Phase 3:** Browser Integration. Chrome Extension setup, CORS transport layer, and Web Mode (DOM automation).
+- **Phase 2 (Completed):** Advanced Orchestration. Multi-model support and context foundation.
+- **Phase 3 (In Progress):** Collaborative UX. Group chat interface, `@Agent` targeting, unified context history, markdown rendering, and parallel streaming.
 - **Phase 4:** Analytics & Optimization. Usage tracking (tokens/cost), response time monitoring, and prompt optimization tools.
+- **Phase 5 (Future):** Browser Integration. Chrome Extension setup, CORS transport layer, and Web Mode (DOM automation).
