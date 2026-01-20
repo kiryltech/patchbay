@@ -8,7 +8,6 @@ const localStorageMock = {
 
 // Mock global fetch
 global.fetch = async (url, options) => {
-    console.log(`[MockFetch] ${options.method} ${url}`);
     if (url.includes('openai')) {
         return {
             ok: true,
@@ -71,25 +70,26 @@ async function runTests() {
 
     // Test 3: Send message to Gemini
     try {
-        const { response } = await orchestrator.dispatch('gemini', 'Hello Gemini');
-        if (response === 'Gemini Response') {
-            console.log('Test 3 Passed: Gemini response');
-        } else {
-            console.error('Test 3 Failed: Unexpected response', response);
-        }
+        await orchestrator.dispatch('Hello Gemini', ['gemini'], (result) => {
+            if (result.response === 'Gemini Response') {
+                console.log('Test 3 Passed: Gemini response');
+            } else {
+                console.error('Test 3 Failed: Unexpected response', result);
+            }
+        });
     } catch (e) {
         console.error('Test 3 Failed: Exception', e);
     }
 
     // Test 4: Send message to OpenAI
-    orchestrator.setActiveProviders(['openai']);
     try {
-        const { response } = await orchestrator.dispatch('openai', 'Hello OpenAI');
-        if (response === 'OpenAI Response') {
-            console.log('Test 4 Passed: OpenAI response');
-        } else {
-            console.error('Test 4 Failed: Unexpected response', response);
-        }
+        await orchestrator.dispatch('Hello OpenAI', ['openai'], (result) => {
+            if (result.response === 'OpenAI Response') {
+                console.log('Test 4 Passed: OpenAI response');
+            } else {
+                console.error('Test 4 Failed: Unexpected response', result);
+            }
+        });
     } catch (e) {
         console.error('Test 4 Failed: Exception', e);
     }
@@ -97,7 +97,11 @@ async function runTests() {
     // Test 5: Broadcast to both providers
     orchestrator.setActiveProviders(['openai', 'gemini']);
     try {
-        const results = await orchestrator.broadcast('Hello All');
+        const results = new Map();
+        await orchestrator.dispatch('Hello All', [], (result) => {
+            results.set(result.providerId, result);
+        });
+
         const openaiResult = results.get('openai');
         const geminiResult = results.get('gemini');
 

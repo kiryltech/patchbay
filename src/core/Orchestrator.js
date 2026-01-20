@@ -7,8 +7,8 @@ export class Orchestrator {
     constructor() {
         /** @type {Map<string, AIProvider>} */
         this.providers = new Map();
-        /** @type {Map<string, Message[]>} */
-        this.conversations = new Map();
+        /** @type {Message[]} */
+        this.conversationHistory = [];
         /** @type {string[]} */
         this.activeProviderIds = [];
     }
@@ -19,7 +19,6 @@ export class Orchestrator {
      */
     registerProvider(provider) {
         this.providers.set(provider.id, provider);
-        this.conversations.set(provider.id, []); // Initialize empty conversation history
         if (this.activeProviderIds.length === 0) {
             this.activeProviderIds.push(provider.id);
         }
@@ -44,51 +43,34 @@ export class Orchestrator {
     }
 
     /**
-     * Sends a message to a specific provider, managing its context.
-     * @param {string} providerId
-     * @param {string} text
-     * @returns {Promise<{response: string, providerId: string}>}
+     * Sends a user message to one or more providers and adds it to the unified history.
+     * @param {string} text The user's message.
+     * @param {string[]} targetProviderIds The specific providers to target. If empty, uses active providers.
+     * @param {(result: {response?: string, error?: Error, providerId: string}) => void} onProgress Callback for each result.
+     * @returns {Promise<void>}
      */
-    async dispatch(providerId, text) {
-        const provider = this.providers.get(providerId);
-        if (!provider) {
-            throw new Error(`Provider not found: ${providerId}`);
-        }
+    async dispatch(text, targetProviderIds, onProgress) {
+        const userMessage = { role: 'user', content: text, providerId: 'user' };
+        this.conversationHistory.push(userMessage);
 
-        const history = this.conversations.get(providerId) || [];
-        history.push({ role: 'user', content: text });
+        const providersToQuery = (targetProviderIds.length > 0 ? targetProviderIds : this.activeProviderIds)
+            .map(id => this.providers.get(id))
+            .filter(Boolean);
 
-        console.log(`[Orchestrator] Dispatching to ${provider.id}...`);
-        try {
-            const response = await provider.sendPrompt(text, history);
-            history.push({ role: 'assistant', content: response });
-            this.conversations.set(providerId, history);
-            return { response, providerId };
-        } catch (error) {
-            console.error(`[Orchestrator] Error from ${provider.id}:`, error);
-            history.pop(); // Remove user message on failure
-            throw error;
-        }
-    }
-
-    /**
-     * Sends a message to all active providers.
-     * @param {string} text
-     * @returns {Promise<Map<string, {response?: string, error?: Error}>>}
-     */
-    async broadcast(text) {
-        const results = new Map();
-        const promises = this.activeProviderIds.map(async (providerId) => {
+        const promises = providersToQuery.map(async (provider) => {
+            console.log(`[Orchestrator] Dispatching to ${provider.id}...`);
             try {
-                const { response } = await this.dispatch(providerId, text);
-                results.set(providerId, { response });
+                const response = await provider.sendPrompt(text, this.conversationHistory);
+                const assistantMessage = { role: 'assistant', content: response, providerId: provider.id };
+                this.conversationHistory.push(assistantMessage);
+                onProgress({ response, providerId: provider.id });
             } catch (error) {
-                results.set(providerId, { error });
+                console.error(`[Orchestrator] Error from ${provider.id}:`, error);
+                onProgress({ error, providerId: provider.id });
             }
         });
 
         await Promise.all(promises);
-        return results;
     }
 
     /**
@@ -100,22 +82,18 @@ export class Orchestrator {
     }
 
     /**
-     * Gets the conversation history for a specific provider.
-     * @param {string} providerId
-     * @returns {Message[] | undefined}
+     * Gets the entire conversation history.
+     * @returns {Message[]}
      */
-    getConversation(providerId) {
-        return this.conversations.get(providerId);
+    getConversationHistory() {
+        return this.conversationHistory;
     }
 
     /**
-     * Clears the conversation history for a specific provider.
-     * @param {string} providerId
+     * Clears the conversation history.
      */
-    clearConversation(providerId) {
-        if (this.conversations.has(providerId)) {
-            this.conversations.set(providerId, []);
-            console.log(`[Orchestrator] Cleared conversation for: ${providerId}`);
-        }
+    clearConversationHistory() {
+        this.conversationHistory = [];
+        console.log('[Orchestrator] Cleared conversation history.');
     }
 }

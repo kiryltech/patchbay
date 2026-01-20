@@ -54,12 +54,14 @@ export class ApiAdapter {
     }
 
     async _sendOpenAI(text, history, apiKey) {
-        // Construct messages. History + current user message
-        const messages = history.map(msg => ({
+        const systemMessage = {
+            role: 'system',
+            content: `You are '${this.name}'. Keep your responses concise and to the point.`
+        };
+        const messages = [systemMessage, ...history.map(msg => ({
             role: msg.role,
             content: msg.content
-        }));
-        messages.push({ role: 'user', content: text });
+        }))];
 
         const response = await fetch(`${this.endpoint}/v1/chat/completions`, {
             method: 'POST',
@@ -83,14 +85,19 @@ export class ApiAdapter {
     }
 
     async _sendGemini(text, history, apiKey) {
-        // Construct contents
-        // Gemini expects: { contents: [{ role: "user", parts: [{ text: "..." }] }] }
-        // Role mapping: user -> user, assistant -> model
+        const systemMessage = `You are '${this.name}'. Keep your responses concise and to the point.`;
         const contents = history.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: msg.content }]
         }));
-        contents.push({ role: 'user', parts: [{ text: text }] });
+
+        // Prepend system message to the first user message
+        const firstUserMessage = contents.find(c => c.role === 'user');
+        if (firstUserMessage) {
+            firstUserMessage.parts[0].text = `${systemMessage}\n\n${firstUserMessage.parts[0].text}`;
+        } else {
+            contents.unshift({ role: 'user', parts: [{ text: systemMessage }] });
+        }
 
         const url = `${this.endpoint}/v1beta/models/${this.model}:generateContent?key=${apiKey}`;
 
