@@ -9,6 +9,7 @@ export class UIManager {
         this.sendButton = document.getElementById('send-button');
         this.scratchpad = document.getElementById('scratchpad');
         this.pipeActionsContainer = document.getElementById('pipe-actions-container');
+        this.autocompletePopup = document.getElementById('autocomplete-popup');
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
@@ -29,6 +30,15 @@ export class UIManager {
                 this.handleSend();
             }
         });
+
+        this.inputElement.addEventListener('input', () => this.handleAutocomplete());
+
+        // Hide autocomplete when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.inputElement.contains(e.target) && !this.autocompletePopup.contains(e.target)) {
+                this.autocompletePopup.classList.add('hidden');
+            }
+        });
     }
 
     initializeAgentVisuals() {
@@ -44,26 +54,33 @@ export class UIManager {
     }
 
     async handleSend() {
-        const text = this.inputElement.value.trim();
-        if (!text) return;
+        const rawText = this.inputElement.value;
+        if (!rawText.trim()) return;
 
-        this.appendMessage({ role: 'user', content: text, providerId: 'user' });
+        this.appendMessage({ role: 'user', content: rawText, providerId: 'user' });
         this.inputElement.value = '';
 
-        const { target, cleanText } = this.parseInput(text);
-        const targetIds = target.length > 0
-            ? this.orchestrator.getProviders()
-                .filter(p => target.includes(p.name.toLowerCase()))
-                .map(p => p.id)
-            : this.orchestrator.activeProviderIds;
+        const { targets, cleanText } = this.parseInput(rawText);
+        let targetIds = [];
 
-        if (targetIds.length === 0) {
-            this.appendMessage({ role: 'system', content: 'No active or targeted agent selected.' });
-            return;
+        if (targets.includes('@all') || targets.includes('@everyone')) {
+            targetIds = this.orchestrator.getActiveProviders().map(p => p.id);
+        } else if (targets.length > 0) {
+            const providerNames = this.orchestrator.getProviders().map(p => p.name.toLowerCase());
+            const matchedTargets = targets
+                .map(target => target.substring(1).toLowerCase()) // remove '@'
+                .filter(targetName => providerNames.includes(targetName));
+
+            targetIds = this.orchestrator.getProviders()
+                .filter(p => matchedTargets.includes(p.name.toLowerCase()))
+                .map(p => p.id);
         }
+        // If no targets, targetIds remains empty, implementing "Passive by Default"
 
+        // Show typing indicators for all targeted agents
         targetIds.forEach(id => this.showTypingIndicator(id));
 
+        // Dispatch the prompt
         await this.orchestrator.dispatch(cleanText, targetIds, (result) => {
             this.removeTypingIndicator(result.providerId);
             if (result.error) {
@@ -71,14 +88,15 @@ export class UIManager {
             } else {
                 this.appendMessage({ role: 'assistant', content: result.response, providerId: result.providerId });
             }
-        });
+        }, rawText); // Pass raw text for history
     }
 
     parseInput(text) {
-        const mentionRegex = /@([\w\s-]+)/g;
-        const mentions = (text.match(mentionRegex) || []).map(m => m.substring(1).toLowerCase().trim());
+        const mentionRegex = /@([\w\s-]+|all|everyone)/g;
+        const matches = text.match(mentionRegex) || [];
+        const targets = matches.map(m => m.toLowerCase());
         const cleanText = text.replace(mentionRegex, '').trim();
-        return { target: mentions, cleanText };
+        return { targets, cleanText };
     }
 
     showTypingIndicator(providerId) {

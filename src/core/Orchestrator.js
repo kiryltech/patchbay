@@ -49,17 +49,25 @@ export class Orchestrator {
      * @param {(result: {response?: string, error?: Error, providerId: string}) => void} onProgress Callback for each result.
      * @returns {Promise<void>}
      */
-    async dispatch(text, targetProviderIds, onProgress) {
-        const userMessage = { role: 'user', content: text, providerId: 'user' };
+    async dispatch(text, targetProviderIds, onProgress, rawText = null) {
+        // If rawText is provided, use it for history, otherwise use 'text'.
+        const userMessage = { role: 'user', content: rawText || text, providerId: 'user' };
         this.conversationHistory.push(userMessage);
 
-        const providersToQuery = (targetProviderIds.length > 0 ? targetProviderIds : this.activeProviderIds)
+        // "Passive by Default": Only dispatch if there are specific targets.
+        if (!targetProviderIds || targetProviderIds.length === 0) {
+            console.log('[Orchestrator] No targets. Message saved to history.');
+            return;
+        }
+
+        const providersToQuery = targetProviderIds
             .map(id => this.providers.get(id))
             .filter(Boolean);
 
         const promises = providersToQuery.map(async (provider) => {
             console.log(`[Orchestrator] Dispatching to ${provider.id}...`);
             try {
+                // Providers receive the potentially cleaned text.
                 const response = await provider.sendPrompt(text, this.conversationHistory);
                 const assistantMessage = { role: 'assistant', content: response, providerId: provider.id };
                 this.conversationHistory.push(assistantMessage);

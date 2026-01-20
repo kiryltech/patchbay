@@ -94,11 +94,28 @@ async function runTests() {
         console.error('Test 4 Failed: Exception', e);
     }
 
-    // Test 5: Broadcast to both providers
+    // Test 5: Passive by Default
+    orchestrator.setActiveProviders(['openai', 'gemini']);
+    try {
+        let dispatchCalled = false;
+        await orchestrator.dispatch('Hello All', [], (result) => {
+            dispatchCalled = true;
+        });
+
+        if (!dispatchCalled) {
+            console.log('Test 5 Passed: Passive by Default');
+        } else {
+            console.error('Test 5 Failed: Dispatch was called');
+        }
+    } catch (e) {
+        console.error('Test 5 Failed: Passive by Default exception', e);
+    }
+
+    // Test 6: Broadcast to both providers
     orchestrator.setActiveProviders(['openai', 'gemini']);
     try {
         const results = new Map();
-        await orchestrator.dispatch('Hello All', [], (result) => {
+        await orchestrator.dispatch('Hello @all', ['openai', 'gemini'], (result) => {
             results.set(result.providerId, result);
         });
 
@@ -106,12 +123,12 @@ async function runTests() {
         const geminiResult = results.get('gemini');
 
         if (openaiResult.response === 'OpenAI Response' && geminiResult.response === 'Gemini Response') {
-            console.log('Test 5 Passed: Broadcast response');
+            console.log('Test 6 Passed: Broadcast response');
         } else {
-            console.error('Test 5 Failed: Unexpected broadcast response', results);
+            console.error('Test 6 Failed: Unexpected broadcast response', results);
         }
     } catch (e) {
-        console.error('Test 5 Failed: Broadcast exception', e);
+        console.error('Test 6 Failed: Broadcast exception', e);
     }
 }
 

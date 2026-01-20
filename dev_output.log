@@ -1,9 +1,5 @@
 
 > patchbay-local@1.0.0 dev
-> vite
+> vite --host
 
-
-  VITE v5.4.21  ready in 221 ms
-
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
+sh: 1: vite: not found
