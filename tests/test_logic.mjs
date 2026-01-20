@@ -55,15 +55,15 @@ async function runTests() {
     orchestrator.registerProvider(geminiAdapter);
 
     // Test 1: Default provider selection
-    if (orchestrator.activeProviderId !== 'openai') {
+    if (orchestrator.activeProviderIds[0] !== 'openai') {
         console.error('Test 1 Failed: Default provider should be openai');
     } else {
         console.log('Test 1 Passed: Default provider');
     }
 
     // Test 2: Switch provider
-    orchestrator.setActiveProvider('gemini');
-    if (orchestrator.activeProviderId !== 'gemini') {
+    orchestrator.setActiveProviders(['gemini']);
+    if (orchestrator.activeProviderIds[0] !== 'gemini') {
          console.error('Test 2 Failed: Provider switch');
     } else {
         console.log('Test 2 Passed: Provider switch');
@@ -71,7 +71,7 @@ async function runTests() {
 
     // Test 3: Send message to Gemini
     try {
-        const response = await orchestrator.dispatch('Hello Gemini');
+        const { response } = await orchestrator.dispatch('gemini', 'Hello Gemini');
         if (response === 'Gemini Response') {
             console.log('Test 3 Passed: Gemini response');
         } else {
@@ -82,9 +82,9 @@ async function runTests() {
     }
 
     // Test 4: Send message to OpenAI
-    orchestrator.setActiveProvider('openai');
+    orchestrator.setActiveProviders(['openai']);
     try {
-        const response = await orchestrator.dispatch('Hello OpenAI');
+        const { response } = await orchestrator.dispatch('openai', 'Hello OpenAI');
         if (response === 'OpenAI Response') {
             console.log('Test 4 Passed: OpenAI response');
         } else {
@@ -92,6 +92,22 @@ async function runTests() {
         }
     } catch (e) {
         console.error('Test 4 Failed: Exception', e);
+    }
+
+    // Test 5: Broadcast to both providers
+    orchestrator.setActiveProviders(['openai', 'gemini']);
+    try {
+        const results = await orchestrator.broadcast('Hello All');
+        const openaiResult = results.get('openai');
+        const geminiResult = results.get('gemini');
+
+        if (openaiResult.response === 'OpenAI Response' && geminiResult.response === 'Gemini Response') {
+            console.log('Test 5 Passed: Broadcast response');
+        } else {
+            console.error('Test 5 Failed: Unexpected broadcast response', results);
+        }
+    } catch (e) {
+        console.error('Test 5 Failed: Broadcast exception', e);
     }
 }
 
