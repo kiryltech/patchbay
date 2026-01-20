@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Patchbay Bridge",
+  "version": "1.0",
+  "description": "Provides a transport layer for the Patchbay local AI orchestrator.",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "externally_connectable": {
+    "matches": ["http://localhost:5173/*"]
+  }
+}
