@@ -1,9 +1,0 @@
-
-> patchbay-local@1.0.0 proxy
-> node proxy.server.js
-
-[HPM] Proxy created: /  -> https://api.openai.com
-[HPM] Proxy rewrite rule created: "^/api/openai" ~> ""
-[HPM] Proxy created: /  -> https://generativelanguage.googleapis.com
-[HPM] Proxy rewrite rule created: "^/api/google" ~> ""
-Proxy server is running on http://localhost:3000
