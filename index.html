@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -104,10 +105,6 @@
 <span class="material-symbols-outlined text-gray-400" style="font-size: 20px;">terminal</span>
 <span class="text-xs font-bold text-gray-300 uppercase tracking-widest">Command Deck</span>
 </div>
-<label class="flex items-center gap-2 cursor-pointer select-none group">
-<input id="broadcast-toggle" checked="" class="form-checkbox bg-surface-darker border-gray-600 rounded text-primary focus:ring-0 focus:ring-offset-0 size-4" type="checkbox"/>
-<span class="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">BROADCAST TO ALL</span>
-</label>
 </div>
 <div class="relative flex-1">
 <textarea id="user-input" class="w-full h-full bg-surface-darker border border-border-dark rounded-lg p-3 pr-24 font-mono text-sm text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary resize-none outline-none scrollbar-thin" placeholder="Enter system prompt or user query here..."></textarea>

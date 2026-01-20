@@ -4,20 +4,18 @@ export class UIManager {
      */
     constructor(orchestrator) {
         this.orchestrator = orchestrator;
-        this.messageContainer = null;
-        this.inputElement = null;
-        this.sendButton = null;
-        this.broadcastToggle = null;
-    }
-
-    init() {
         this.messageContainer = document.getElementById('message-container');
         this.inputElement = document.getElementById('user-input');
         this.sendButton = document.getElementById('send-button');
-        this.broadcastToggle = document.getElementById('broadcast-toggle');
         this.scratchpad = document.getElementById('scratchpad');
         this.pipeActionsContainer = document.getElementById('pipe-actions-container');
 
+        this.agentVisuals = new Map();
+        this.typingIndicators = new Map();
+    }
+
+    init() {
+        this.initializeAgentVisuals();
         this.bindEvents();
         this.renderAgentList();
         this.renderPipeActions();
@@ -33,49 +31,98 @@ export class UIManager {
         });
     }
 
+    initializeAgentVisuals() {
+        const colors = ['#00aeff', '#ff6b6b', '#48dbfb', '#ff9f43', '#1dd1a1'];
+        const icons = ['smart_toy', 'psychology', 'neurology', 'model_training', 'hub'];
+        const providers = this.orchestrator.getProviders();
+        providers.forEach((provider, index) => {
+            this.agentVisuals.set(provider.id, {
+                color: colors[index % colors.length],
+                icon: icons[index % icons.length]
+            });
+        });
+    }
+
     async handleSend() {
         const text = this.inputElement.value.trim();
         if (!text) return;
 
-        this.appendMessage('user', text);
+        this.appendMessage({ role: 'user', content: text, providerId: 'user' });
         this.inputElement.value = '';
 
-        const isBroadcast = this.broadcastToggle.checked;
+        const { target, cleanText } = this.parseInput(text);
+        const targetIds = target.length > 0
+            ? this.orchestrator.getProviders()
+                .filter(p => target.includes(p.name.toLowerCase()))
+                .map(p => p.id)
+            : this.orchestrator.activeProviderIds;
 
-        if (isBroadcast) {
-            this.handleBroadcast(text);
-        } else {
-            const activeProvider = this.orchestrator.getActiveProviders()[0];
-            if (activeProvider) {
-                this.handleSingleDispatch(activeProvider.id, text);
-            } else {
-                this.appendMessage('system', 'No active provider selected.');
-            }
+        if (targetIds.length === 0) {
+            this.appendMessage({ role: 'system', content: 'No active or targeted agent selected.' });
+            return;
         }
-    }
 
-    async handleSingleDispatch(providerId, text) {
-        try {
-            const { response } = await this.orchestrator.dispatch(providerId, text);
-            this.appendMessage('assistant', response, providerId);
-        } catch (error) {
-            console.error(error);
-            this.appendMessage('system', `Error from ${providerId}: ${error.message}`);
-        }
-    }
+        targetIds.forEach(id => this.showTypingIndicator(id));
 
-    async handleBroadcast(text) {
-        const results = await this.orchestrator.broadcast(text);
-        results.forEach(({ response, error }, providerId) => {
-            if (error) {
-                this.appendMessage('system', `Error from ${providerId}: ${error.message}`);
+        await this.orchestrator.dispatch(cleanText, targetIds, (result) => {
+            this.removeTypingIndicator(result.providerId);
+            if (result.error) {
+                this.appendMessage({ role: 'system', content: `Error from ${result.providerId}: ${result.error.message}` });
             } else {
-                this.appendMessage('assistant', response, providerId);
+                this.appendMessage({ role: 'assistant', content: result.response, providerId: result.providerId });
             }
         });
     }
 
-    appendMessage(role, text, providerId = null) {
+    parseInput(text) {
+        const mentionRegex = /@([\w\s-]+)/g;
+        const mentions = (text.match(mentionRegex) || []).map(m => m.substring(1).toLowerCase().trim());
+        const cleanText = text.replace(mentionRegex, '').trim();
+        return { target: mentions, cleanText };
+    }
+
+    showTypingIndicator(providerId) {
+        if (this.typingIndicators.has(providerId)) return;
+
+        const visuals = this.agentVisuals.get(providerId);
+        const provider = this.orchestrator.providers.get(providerId);
+
+        const indicator = document.createElement('div');
+        indicator.className = 'flex gap-3';
+        indicator.innerHTML = `
+            <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
+                <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
+            </div>
+            <div class="flex-1 space-y-2">
+                <div class="text-xs font-mono mb-1" style="color: ${visuals.color};">${provider.name.toUpperCase()}</div>
+                <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full">
+                    <div class="flex items-center gap-2">
+                        <div class="size-2 bg-primary rounded-full animate-pulse"></div>
+                        <div class="size-2 bg-primary rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
+                        <div class="size-2 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+                    </div>
+                </div>
+            </div>`;
+
+        this.messageContainer.appendChild(indicator);
+        this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+        this.typingIndicators.set(providerId, indicator);
+    }
+
+    removeTypingIndicator(providerId) {
+        if (this.typingIndicators.has(providerId)) {
+            this.typingIndicators.get(providerId).remove();
+            this.typingIndicators.delete(providerId);
+        }
+    }
+
+    appendMessage(message) {
+        // Clear initial message
+        if (this.messageContainer.querySelector('.opacity-50')) {
+            this.messageContainer.innerHTML = '';
+        }
+
+        const { role, content, providerId } = message;
         const div = document.createElement('div');
         div.className = `flex gap-3 ${role === 'user' ? 'justify-end' : ''}`;
 
@@ -84,25 +131,27 @@ export class UIManager {
         if (role === 'user') {
             contentHtml = `
                 <div class="bg-surface-dark border border-border-dark rounded-lg rounded-tr-none px-4 py-3 max-w-[85%]">
-                    <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${this.escapeHtml(text)}</p>
+                    <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${this.escapeHtml(content)}</p>
                 </div>
                 <div class="size-8 rounded bg-gradient-to-br from-primary to-blue-700 shrink-0"></div>
             `;
         } else if (role === 'assistant') {
             const provider = this.orchestrator.providers.get(providerId);
-            const providerName = provider ? provider.name.toUpperCase() : 'AI';
-
+            const visuals = this.agentVisuals.get(providerId);
             contentHtml = `
-                <div class="size-8 rounded bg-green-900/30 border border-green-500/30 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-green-500 text-sm">smart_toy</span>
+                <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
+                    <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
                 </div>
                 <div class="flex-1 space-y-2">
-                    <div class="text-xs text-status-green font-mono mb-1 flex justify-between items-center">
-                        <span>${providerName}</span>
-                        <span class="material-symbols-outlined text-gray-600 hover:text-primary cursor-pointer pipe-icon" style="font-size: 16px;">shortcut</span>
+                    <div class="text-xs font-mono mb-1 flex justify-between items-center" style="color: ${visuals.color};">
+                        <span>${provider.name.toUpperCase()}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-600 hover:text-primary cursor-pointer copy-icon" style="font-size: 16px;">content_copy</span>
+                            <span class="material-symbols-outlined text-gray-600 hover:text-primary cursor-pointer pipe-icon" style="font-size: 16px;">shortcut</span>
+                        </div>
                     </div>
-                    <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full">
-                        <p class="text-sm text-gray-300 whitespace-pre-wrap">${this.escapeHtml(text)}</p>
+                    <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full message-content">
+                        ${content}
                     </div>
                 </div>
             `;
@@ -110,7 +159,7 @@ export class UIManager {
              contentHtml = `
                 <div class="flex-1 space-y-2">
                     <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 w-full">
-                        <p class="text-sm text-red-400 font-mono">${this.escapeHtml(text)}</p>
+                        <p class="text-sm text-red-400 font-mono">${this.escapeHtml(content)}</p>
                     </div>
                 </div>
             `;
@@ -120,12 +169,12 @@ export class UIManager {
         this.messageContainer.appendChild(div);
         this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
 
-        const pipeIcon = div.querySelector('.pipe-icon');
-        if (pipeIcon) {
-            pipeIcon.addEventListener('click', () => {
-                this.scratchpad.value = text;
-            });
-        }
+        div.querySelector('.copy-icon')?.addEventListener('click', () => {
+            navigator.clipboard.writeText(content);
+        });
+        div.querySelector('.pipe-icon')?.addEventListener('click', () => {
+            this.scratchpad.value = content;
+        });
     }
 
     escapeHtml(text) {
@@ -183,18 +232,20 @@ export class UIManager {
         const providers = this.orchestrator.getProviders();
         providers.forEach(p => {
             const button = document.createElement('button');
+            const visuals = this.agentVisuals.get(p.id);
             button.className = 'flex items-center justify-between p-2 rounded bg-surface-dark border border-border-dark hover:border-gray-500 hover:bg-[#2e2e33] transition-all group text-left';
             button.innerHTML = `
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-gray-200">Pipe to ${p.name}</span>
                     <span class="text-[10px] text-gray-500">Sends scratchpad as User Msg</span>
                 </div>
-                <span class="material-symbols-outlined text-gray-600 group-hover:text-primary" style="font-size: 18px;">arrow_forward</span>
+                <span class="material-symbols-outlined text-gray-600 group-hover:text-primary" style="font-size: 18px; color: ${visuals.color};">arrow_forward</span>
             `;
             button.addEventListener('click', () => {
                 const text = this.scratchpad.value.trim();
                 if (text) {
-                    this.handleSingleDispatch(p.id, text);
+                    this.inputElement.value = `@${p.name} ${text}`;
+                    this.handleSend();
                 }
             });
             this.pipeActionsContainer.appendChild(button);
