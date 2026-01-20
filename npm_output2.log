@@ -1,5 +1,0 @@
-
-> patchbay-local@1.0.0 start
-> concurrently "npm run proxy" "npm run dev"
-
-sh: 1: concurrently: not found

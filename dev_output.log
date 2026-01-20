@@ -1,5 +1,0 @@
-
-> patchbay-local@1.0.0 dev
-> vite --host
-
-sh: 1: vite: not found
