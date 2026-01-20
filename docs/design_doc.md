@@ -112,7 +112,7 @@ interface AIProvider {
 {
   "chatgpt": {
     "mode": "API",
-    "apiKey": "sk-…",
+    "apiKey": "sk-...",
     "model": "gpt-5"
   },
   "gemini": {
@@ -141,7 +141,7 @@ interface AIProvider {
 * **CORS Handling (Strategy):**
     * *Development (Phase 1-2):* Uses a lightweight local proxy (e.g., Node.js dev server) to bypass browser CORS
       restrictions during initial development.
-    * *Production (Phase 3):* Swaps the transport layer to utilize the **Chrome Extension Background Worker**. This
+    * *Production (Phase 3-5):* Swaps the transport layer to utilize the **Chrome Extension Background Worker**. This
       removes the need for the proxy, achieving the "Zero-Backend" goal by delegating network requests to the extension
       context.
 
@@ -190,28 +190,30 @@ The service worker now has **two** responsibilities:
 
 ## 7. Implementation Roadmap
 
-### Phase 1: API-First Core (New Focus)
+### Phase 1: API-First Core (Completed)
 
 * **Foundation:** Initialize Local Control Center (Web Client).
 * **Engine:** Implement `AIProvider` interface and `Orchestration Engine`.
 * **Connectivity:** Develop `ApiAdapter` for standard REST APIs (OpenAI, Gemini).
 * **Security:** Build Settings UI for secure local API Key storage.
-* *Note:* Use a temporary local dev proxy to handle CORS until Phase 3.
 
-### Phase 2: Advanced Orchestration
+### Phase 2: Advanced Orchestration (Completed)
 
 * **Context:** Implement Message History and Context Management.
 * **Multi-Model:** Enable simultaneous querying of multiple models.
 * **Workflows:** Add "Pipe" functionality (Output of Model A -> Input of Model B).
 
-### Phase 3: Collaborative UX (New Focus)
+### Phase 3: Collaborative UX (Refinements)
 
 * **Group Chat Model:** Move from "Isolated Streams" to "Unified Team Chat". All active agents share the same context
   history.
-* **Targeting:** Implement `@AgentName` syntax in the input field to direct prompts to specific models. If no target is
-  specified, broadcast to all active agents.
-* **Async & Parallel:** Ensure all models process requests asynchronously. Render responses in real-time as they
-  arrive (streaming effect or immediate completion).
+* **Targeting & Autocomplete:**
+    * Implement `@AgentName` syntax in the input field to direct prompts to specific models.
+    * Add **Autocomplete** UI when the user types `@`.
+    * Special Aliases: `@all` and `@everyone` trigger a broadcast to all active agents.
+* **Passive by Default:** If no `@mention` is present in the message, the message is saved to history (to build context)
+  but **no agent responds**.
+* **Async & Parallel:** Ensure all models process requests asynchronously. Render responses in real-time as they arrive.
 * **Visual Polish:**
     * **Loading Indicators:** Show "Typing..." states for each agent.
     * **Distinct Identities:** Assign unique colors/avatars to each model.
