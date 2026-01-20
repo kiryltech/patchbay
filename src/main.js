@@ -10,29 +10,52 @@ const uiManager = new UIManager(orchestrator);
 
 // Register Providers
 // Note: We use the local proxy address for endpoints.
-const openaiAdapter = new ApiAdapter({
-    id: 'openai-gpt-4',
-    name: 'GPT-4 Turbo',
+
+// OpenAI Models (2026)
+const gpt5Pro = new ApiAdapter({
+    id: 'openai-gpt-5.2-pro',
+    name: 'GPT-5.2 Pro',
     type: 'openai',
     endpoint: 'http://localhost:3000/api/openai',
-    model: 'gpt-4-turbo-preview',
+    model: 'gpt-5.2-pro',
     getApiKey: () => settingsUI.getOpenAIKey()
 });
 
-const geminiAdapter = new ApiAdapter({
-    id: 'google-gemini-pro',
-    name: 'Gemini Pro',
+const gpt5Mini = new ApiAdapter({
+    id: 'openai-gpt-5-mini',
+    name: 'GPT-5 Mini',
+    type: 'openai',
+    endpoint: 'http://localhost:3000/api/openai',
+    model: 'gpt-5-mini',
+    getApiKey: () => settingsUI.getOpenAIKey()
+});
+
+// Gemini Models (2026)
+const gemini3Pro = new ApiAdapter({
+    id: 'google-gemini-3-pro',
+    name: 'Gemini 3 Pro',
     type: 'gemini',
     endpoint: 'http://localhost:3000/api/google',
-    model: 'gemini-pro',
+    model: 'gemini-3-pro',
     getApiKey: () => settingsUI.getGeminiKey()
 });
 
-orchestrator.registerProvider(openaiAdapter);
-orchestrator.registerProvider(geminiAdapter);
+const gemini3Flash = new ApiAdapter({
+    id: 'google-gemini-3-flash',
+    name: 'Gemini 3 Flash',
+    type: 'gemini',
+    endpoint: 'http://localhost:3000/api/google',
+    model: 'gemini-3-flash-preview', // Using preview endpoint
+    getApiKey: () => settingsUI.getGeminiKey()
+});
+
+orchestrator.registerProvider(gpt5Pro);
+orchestrator.registerProvider(gpt5Mini);
+orchestrator.registerProvider(gemini3Pro);
+orchestrator.registerProvider(gemini3Flash);
 
 // Set default if not set
-orchestrator.setActiveProvider('openai-gpt-4');
+orchestrator.setActiveProviders(['google-gemini-3-flash']);
 
 // Initialize UI
 uiManager.init();
