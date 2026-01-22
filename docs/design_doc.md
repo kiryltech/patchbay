@@ -23,7 +23,7 @@ AI independently, abstracting over inconsistent interfaces to provide a unified 
 ### 1.2 Conceptual Model: Why "Patchbay"?
 
 While the user interface resembles a modern group chat (e.g., Slack, Discord), the core mechanic remains that of a *
-*Control Plane**.
+***Control Plane**.
 
 * **The Room (Bus):** The unified chat history acts as the main signal bus. All agents share this context, allowing them
   to "hear" each other.
@@ -112,7 +112,7 @@ interface AIProvider {
 {
   "chatgpt": {
     "mode": "API",
-    "apiKey": "sk-...",
+    "apiKey": "sk-..",
     "model": "gpt-5"
   },
   "gemini": {
@@ -205,19 +205,22 @@ The service worker now has **two** responsibilities:
 
 ### Phase 3: Collaborative UX (Refinements)
 
-* **Group Chat Model:** Move from "Isolated Streams" to "Unified Team Chat". All active agents share the same context
-  history.
+* **Group Chat Model:** Unified Team Chat where all active agents share the same context history.
+* **Dynamic Roster (The Hangar):**
+    * **Empty by Default:** The Hangar starts empty (or restored from `localStorage`).
+    * **Agent Catalog:** The `(+)` button opens a selection menu to add specific AI models to the current session.
+    * **Active = Participant:** Any agent visible in the Hangar is considered "Active" and will respond to `@all`.
+      Toggles are removed.
+    * **Persistence:** The list of session participants is saved to `localStorage` to persist across reloads.
 * **Targeting & Autocomplete:**
-    * Implement `@AgentName` syntax in the input field to direct prompts to specific models.
-    * Add **Autocomplete** UI when the user types `@`.
-    * Special Aliases: `@all` and `@everyone` trigger a broadcast to all active agents.
-* **Passive by Default:** If no `@mention` is present in the message, the message is saved to history (to build context)
-  but **no agent responds**.
-* **Async & Parallel:** Ensure all models process requests asynchronously. Render responses in real-time as they arrive.
+    * Implement `@AgentName` syntax in the input field.
+    * **Scoped Autocomplete:** The `@` suggestions only show agents currently in the Hangar.
+    * Special Aliases: `@all` and `@everyone` trigger a broadcast to all Hangar participants.
+* **Passive by Default:** Messages without `@mentions` are saved to history without triggering responses.
 * **Visual Polish:**
-    * **Loading Indicators:** Show "Typing..." states for each agent.
-    * **Distinct Identities:** Assign unique colors/avatars to each model.
-    * **Markdown:** Render responses with Markdown support, but include a "Copy Original" button for raw text access.
+    * **Markdown & Attribution:** Standardized `@Handle` identity system for system prompts and history attribution.
+    * **Loading Indicators:** Per-agent "Typing..." states.
+    * **Markdown Rendering:** With "Copy Original" functionality.
 
 ### Phase 4: Analytics & Optimization
 
