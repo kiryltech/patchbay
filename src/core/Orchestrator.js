@@ -69,7 +69,8 @@ export class Orchestrator {
             try {
                 // Providers receive the potentially cleaned text.
                 const response = await provider.sendPrompt(text, this.conversationHistory);
-                const assistantMessage = { role: 'assistant', content: response, providerId: provider.id };
+                const handle = '@' + provider.name.replace(/\s+/g, '');
+                const assistantMessage = { role: 'assistant', content: response, providerId: provider.id, providerHandle: handle };
                 this.conversationHistory.push(assistantMessage);
                 onProgress({ response, providerId: provider.id });
             } catch (error) {

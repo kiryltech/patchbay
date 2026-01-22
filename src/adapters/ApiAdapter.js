@@ -16,6 +16,7 @@ export class ApiAdapter {
     constructor(config) {
         this.id = config.id;
         this.name = config.name;
+        this.handle = '@' + this.name.replace(/\s+/g, '');
         this.mode = 'API';
         this.type = config.type;
         this.endpoint = config.endpoint;
@@ -44,24 +45,52 @@ export class ApiAdapter {
             throw new Error(`Missing API Key for ${this.name}`);
         }
 
+        // Format history with attribution
+        const formattedHistory = this._formatHistoryForContext(history);
+
         if (this.type === 'openai') {
-            return this._sendOpenAI(text, history, apiKey);
+            return this._sendOpenAI(text, formattedHistory, apiKey);
         } else if (this.type === 'gemini') {
-            return this._sendGemini(text, history, apiKey);
+            return this._sendGemini(text, formattedHistory, apiKey);
         } else {
             throw new Error(`Unknown provider type: ${this.type}`);
         }
     }
 
-    async _sendOpenAI(text, history, apiKey) {
+    /**
+     * Formats history to attribute messages from other agents correctly.
+     * Messages from *this* agent stay as 'assistant'.
+     * Messages from *other* agents become 'user' messages with attribution.
+     * @param {Message[]} history
+     * @returns {Array<{role: string, content: string}>}
+     */
+    _formatHistoryForContext(history) {
+        return history.map(msg => {
+            if (msg.role === 'user') {
+                return { role: 'user', content: msg.content };
+            }
+            
+            // It's an assistant message
+            if (msg.providerId === this.id) {
+                // It was me
+                return { role: 'assistant', content: msg.content };
+            } else {
+                // It was someone else (e.g., 'openai-gpt-4')
+                // We present this as a user message to avoid confusing the model
+                // about its own identity.
+                const attribution = msg.providerHandle ? `${msg.providerHandle} wrote:` : `[${msg.providerId}] wrote:`;
+                return { role: 'user', content: `${attribution}\n${msg.content}` };
+            }
+        });
+    }
+
+    async _sendOpenAI(text, formattedHistory, apiKey) {
         const systemMessage = {
             role: 'system',
-            content: `You are '${this.name}'. Keep your responses concise and to the point.`
+            content: `You are ${this.handle} (${this.name}). You are participating in a group chat with a user and other AI agents. When responding, speak directly to the group. Keep your responses concise.`
         };
-        const messages = [systemMessage, ...history.map(msg => ({
-            role: msg.role,
-            content: msg.content
-        }))];
+        
+        const messages = [systemMessage, ...formattedHistory];
 
         const response = await fetch(`${this.endpoint}/v1/chat/completions`, {
             method: 'POST',
@@ -84,14 +113,14 @@ export class ApiAdapter {
         return data.choices[0].message.content;
     }
 
-    async _sendGemini(text, history, apiKey) {
-        const systemMessage = `You are '${this.name}'. Keep your responses concise and to the point.`;
-        const contents = history.map(msg => ({
+    async _sendGemini(text, formattedHistory, apiKey) {
+        const systemMessage = `You are ${this.handle} (${this.name}). You are participating in a group chat with a user and other AI agents. When responding, speak directly to the group. Keep your responses concise.`;
+        
+        const contents = formattedHistory.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: msg.content }]
         }));
 
-        // Prepend system message to the first user message
         const firstUserMessage = contents.find(c => c.role === 'user');
         if (firstUserMessage) {
             firstUserMessage.parts[0].text = `${systemMessage}\n\n${firstUserMessage.parts[0].text}`;
@@ -117,7 +146,6 @@ export class ApiAdapter {
         }
 
         const data = await response.json();
-        // Parse response
         if (data.candidates && data.candidates.length > 0) {
             return data.candidates[0].content.parts[0].text;
         }

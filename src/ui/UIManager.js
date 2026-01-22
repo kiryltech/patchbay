@@ -103,9 +103,8 @@ export class UIManager {
                 .map(p => p.id);
         }
         
-        // "Passive by Default" - if targetIds is empty, we do nothing (just saved to history)
-        if (targetIds.length === 0) return;
-
+        // "Passive by Default" - if targetIds is empty, dispatch will just save to history.
+        
         // Show typing indicators for all targeted agents
         targetIds.forEach(id => this.showTypingIndicator(id));
 
