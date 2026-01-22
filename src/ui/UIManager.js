@@ -15,6 +15,14 @@ export class UIManager {
         this.typingIndicators = new Map();
         this.selectedIndex = -1;
         this.currentSuggestions = [];
+
+        // Initialize Markdown converter
+        this.mdConverter = new showdown.Converter({
+            tables: true,
+            strikethrough: true,
+            tasklists: true,
+            codeSpans: true
+        });
     }
 
     init() {
@@ -270,6 +278,8 @@ export class UIManager {
         } else if (role === 'assistant') {
             const provider = this.orchestrator.providers.get(providerId);
             const visuals = this.agentVisuals.get(providerId);
+            const renderedContent = this.mdConverter.makeHtml(content);
+            
             contentHtml = `
                 <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
                     <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
@@ -282,8 +292,8 @@ export class UIManager {
                             <span class="material-symbols-outlined text-gray-600 hover:text-primary cursor-pointer pipe-icon" style="font-size: 16px;">shortcut</span>
                         </div>
                     </div>
-                    <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full message-content">
-                        ${content}
+                    <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full message-content prose prose-invert prose-sm max-w-none">
+                        ${renderedContent}
                     </div>
                 </div>
             `;
