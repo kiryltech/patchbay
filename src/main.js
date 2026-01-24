@@ -49,6 +49,15 @@ const gemini3Flash = new ApiAdapter({
     getApiKey: () => settingsUI.getGeminiKey()
 });
 
+const gemini25Flash = new ApiAdapter({
+    id: 'google-gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    type: 'gemini',
+    endpoint: 'http://localhost:3000/api/google',
+    model: 'gemini-2.5-flash', // Current production flash
+    getApiKey: () => settingsUI.getGeminiKey()
+});
+
 const gemma3 = new ApiAdapter({
     id: 'google-gemma-3-27b',
     name: 'Gemma 3 27B',
@@ -62,6 +71,7 @@ orchestrator.registerProvider(gpt5Pro);
 orchestrator.registerProvider(gpt5Mini);
 orchestrator.registerProvider(gemini3Pro);
 orchestrator.registerProvider(gemini3Flash);
+orchestrator.registerProvider(gemini25Flash);
 orchestrator.registerProvider(gemma3);
 
 // Load hangar state from localStorage
