@@ -25,23 +25,31 @@ export class AnalyticsManager {
                 totalTokens: 0,
                 totalLatency: 0,
                 averageLatency: 0,
-                estimatedCost: 0
+                estimatedCost: 0,
+                inputCost: 0,
+                outputCost: 0
             };
         }
 
         const agent = this.analytics.agents[providerId];
         agent.requests++;
+        this.analytics.requests++;
         agent.inputTokens += inputTokens;
         agent.outputTokens += outputTokens;
         agent.totalTokens += inputTokens + outputTokens;
         agent.totalLatency += latency;
         agent.averageLatency = agent.totalLatency / agent.requests;
 
-        const cost = this.calculateCost(inputTokens, outputTokens, pricing);
-        agent.estimatedCost += cost;
-        this.analytics.totalCost += cost;
+        const inputCost = inputTokens * (pricing?.input || 0);
+        const outputCost = outputTokens * (pricing?.output || 0);
 
-        this.analytics.requests++;
+        agent.inputCost = (agent.inputCost || 0) + inputCost;
+        agent.outputCost = (agent.outputCost || 0) + outputCost;
+
+        const totalCost = inputCost + outputCost;
+        agent.estimatedCost += totalCost;
+        this.analytics.totalCost += totalCost;
+
         this.saveAnalytics();
     }
 
@@ -57,11 +65,5 @@ export class AnalyticsManager {
         };
         this.saveAnalytics();
     }
-
-    calculateCost(inputTokens, outputTokens, pricing) {
-        if (!pricing) {
-            return 0;
-        }
-        return (inputTokens * pricing.input) + (outputTokens * pricing.output);
-    }
 }
+

@@ -19,6 +19,7 @@ async function runTests() {
 
     // Test 1: Initial state
     const analyticsManager = new AnalyticsManager();
+    analyticsManager.clearAnalytics(); // Clear before tests
     let analytics = analyticsManager.getAnalytics();
     if (analytics.totalCost === 0 && analytics.requests === 0 && Object.keys(analytics.agents).length === 0) {
         console.log('Test 1 Passed: Initial state is correct');
@@ -27,7 +28,8 @@ async function runTests() {
     }
 
     // Test 2: Record request
-    analyticsManager.recordRequest('openai-gpt-5.2-pro', 1000, 2000, 500);
+    const pricing = { input: 0.001, output: 0.002 };
+    analyticsManager.recordRequest('openai-gpt-5.2-pro', 1000, 2000, 500, pricing);
     analytics = analyticsManager.getAnalytics();
     if (analytics.requests === 1 && analytics.agents['openai-gpt-5.2-pro'].requests === 1) {
         console.log('Test 2 Passed: Record request updates analytics');
@@ -36,11 +38,12 @@ async function runTests() {
     }
 
     // Test 3: Cost calculation
-    const cost = analyticsManager.calculateCost('openai-gpt-5.2-pro', 1000, 2000);
-    if (cost > 0) {
+    analytics = analyticsManager.getAnalytics();
+    const agentData = analytics.agents['openai-gpt-5.2-pro'];
+    if (agentData.inputCost > 0 && agentData.outputCost > 0 && agentData.estimatedCost > 0) {
         console.log('Test 3 Passed: Cost calculation is correct');
     } else {
-        console.error('Test 3 Failed: Cost calculation is incorrect', cost);
+        console.error('Test 3 Failed: Cost calculation is incorrect', agentData);
     }
 
     // Test 4: Data persistence
