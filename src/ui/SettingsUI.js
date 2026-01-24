@@ -32,6 +32,10 @@ export class SettingsUI {
                         <label class="block text-xs font-mono text-gray-400 mb-1">GEMINI API KEY</label>
                         <input type="password" id="gemini-key" class="w-full bg-[#121212] border border-border-dark rounded p-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="AIza...">
                     </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-400 mb-1">ANTHROPIC API KEY</label>
+                        <input type="password" id="anthropic-key" class="w-full bg-[#121212] border border-border-dark rounded p-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="sk-ant-...">
+                    </div>
                     <button id="save-settings" class="w-full bg-primary hover:bg-blue-500 text-white font-bold py-2 rounded transition-colors">
                         Save Keys
                     </button>
@@ -44,8 +48,10 @@ export class SettingsUI {
         // Load saved keys
         const openAIKey = localStorage.getItem('openai_key');
         const geminiKey = localStorage.getItem('gemini_key');
+        const anthropicKey = localStorage.getItem('anthropic_key');
         if (openAIKey) document.getElementById('openai-key').value = openAIKey;
         if (geminiKey) document.getElementById('gemini-key').value = geminiKey;
+        if (anthropicKey) document.getElementById('anthropic-key').value = anthropicKey;
     }
 
     bindEvents() {
@@ -75,9 +81,11 @@ export class SettingsUI {
     save() {
         const openAIKey = document.getElementById('openai-key').value;
         const geminiKey = document.getElementById('gemini-key').value;
+        const anthropicKey = document.getElementById('anthropic-key').value;
 
         localStorage.setItem('openai_key', openAIKey);
         localStorage.setItem('gemini_key', geminiKey);
+        localStorage.setItem('anthropic_key', anthropicKey);
 
         alert('Settings saved!');
         this.toggle();
@@ -89,5 +97,9 @@ export class SettingsUI {
 
     getGeminiKey() {
         return localStorage.getItem('gemini_key');
+    }
+
+    getAnthropicKey() {
+        return localStorage.getItem('anthropic_key');
     }
 }

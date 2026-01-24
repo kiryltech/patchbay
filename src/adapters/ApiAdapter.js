@@ -56,6 +56,8 @@ export class ApiAdapter {
             return this._sendOpenAI(text, formattedHistory, apiKey);
         } else if (this.type === 'gemini') {
             return this._sendGemini(text, formattedHistory, apiKey);
+        } else if (this.type === 'anthropic') {
+            return this._sendAnthropic(text, formattedHistory, apiKey);
         } else {
             throw new Error(`Unknown provider type: ${this.type}`);
         }
@@ -121,6 +123,48 @@ export class ApiAdapter {
             this.analyticsManager.recordRequest(this.id, usage.prompt_tokens, usage.completion_tokens, latency, this.pricing);
         }
         return data.choices[0].message.content;
+    }
+
+    async _sendAnthropic(text, formattedHistory, apiKey) {
+        const startTime = Date.now();
+        const systemMessage = `You are ${this.handle} (${this.name}). Answer the user's questions clearly and concisely.`;
+        
+        // Anthropic messages API requires alternating user/assistant roles and no system role in 'messages'
+        // System prompt is passed as a top-level parameter.
+        
+        const messages = formattedHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
+
+        const response = await fetch(`${this.endpoint}/v1/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+            },
+            body: JSON.stringify({
+                model: this.model,
+                max_tokens: 4096,
+                system: systemMessage,
+                messages: messages
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Anthropic Error: ${response.status} - ${errText}`);
+        }
+
+        const data = await response.json();
+        const latency = Date.now() - startTime;
+        const usage = data.usage;
+        if (usage) {
+            this.analyticsManager.recordRequest(this.id, usage.input_tokens, usage.output_tokens, latency, this.pricing);
+        }
+        return data.content[0].text;
     }
 
     async _sendGemini(text, formattedHistory, apiKey) {

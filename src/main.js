@@ -75,12 +75,46 @@ const gemma3 = new ApiAdapter({
     getApiKey: () => settingsUI.getGeminiKey()
 }, analyticsManager);
 
+// Anthropic Models (2026)
+const claude45Sonnet = new ApiAdapter({
+    id: 'anthropic-claude-4.5-sonnet',
+    name: 'Claude 4.5 Sonnet',
+    type: 'anthropic',
+    endpoint: 'http://localhost:3000/api/anthropic',
+    model: 'claude-sonnet-4-5',
+    pricing: { input: 3.00 / 1_000_000, output: 15.00 / 1_000_000 },
+    getApiKey: () => settingsUI.getAnthropicKey()
+}, analyticsManager);
+
+const claude45Haiku = new ApiAdapter({
+    id: 'anthropic-claude-4.5-haiku',
+    name: 'Claude 4.5 Haiku',
+    type: 'anthropic',
+    endpoint: 'http://localhost:3000/api/anthropic',
+    model: 'claude-haiku-4-5',
+    pricing: { input: 1.00 / 1_000_000, output: 5.00 / 1_000_000 },
+    getApiKey: () => settingsUI.getAnthropicKey()
+}, analyticsManager);
+
+const claude45Opus = new ApiAdapter({
+    id: 'anthropic-claude-4.5-opus',
+    name: 'Claude 4.5 Opus',
+    type: 'anthropic',
+    endpoint: 'http://localhost:3000/api/anthropic',
+    model: 'claude-opus-4-5',
+    pricing: { input: 5.00 / 1_000_000, output: 25.00 / 1_000_000 },
+    getApiKey: () => settingsUI.getAnthropicKey()
+}, analyticsManager);
+
 orchestrator.registerProvider(gpt5Pro);
 orchestrator.registerProvider(gpt5Mini);
 orchestrator.registerProvider(gemini3Pro);
 orchestrator.registerProvider(gemini3Flash);
 orchestrator.registerProvider(gemini25Flash);
 orchestrator.registerProvider(gemma3);
+orchestrator.registerProvider(claude45Sonnet);
+orchestrator.registerProvider(claude45Haiku);
+orchestrator.registerProvider(claude45Opus);
 
 // Load hangar state from localStorage
 const savedHangarIds = localStorage.getItem('hangarParticipantIds');

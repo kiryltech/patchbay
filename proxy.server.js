@@ -48,6 +48,30 @@ app.use('/api/google', createProxyMiddleware({
     }
 }));
 
+// Proxy for Anthropic (Claude)
+app.use('/api/anthropic', createProxyMiddleware({
+    target: 'https://api.anthropic.com',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api/anthropic': '',
+    },
+    onProxyReq: (proxyReq, req, res) => {
+        if (req.headers['x-api-key']) {
+            proxyReq.setHeader('x-api-key', req.headers['x-api-key']);
+        }
+        if (req.headers['anthropic-version']) {
+            proxyReq.setHeader('anthropic-version', req.headers['anthropic-version']);
+        }
+        if (req.headers['anthropic-dangerous-direct-browser-access']) {
+            proxyReq.setHeader('anthropic-dangerous-direct-browser-access', req.headers['anthropic-dangerous-direct-browser-access']);
+        }
+    },
+    onError: (err, req, res) => {
+        console.error('Proxy Error (Anthropic):', err);
+        res.status(500).send('Proxy Error');
+    }
+}));
+
 app.get('/health', (req, res) => {
     res.json({ status: 'OK' });
 });
