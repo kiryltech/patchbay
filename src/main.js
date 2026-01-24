@@ -64,8 +64,11 @@ orchestrator.registerProvider(gemini3Pro);
 orchestrator.registerProvider(gemini3Flash);
 orchestrator.registerProvider(gemma3);
 
-// Set default if not set
-orchestrator.setActiveProviders(['google-gemini-3-flash']);
+// Load hangar state from localStorage
+const savedHangarIds = localStorage.getItem('hangarParticipantIds');
+if (savedHangarIds) {
+    orchestrator.setHangarParticipants(JSON.parse(savedHangarIds));
+}
 
 // Initialize UI
 uiManager.init();

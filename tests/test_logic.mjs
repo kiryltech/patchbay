@@ -2,9 +2,17 @@ import { Orchestrator } from '../src/core/Orchestrator.js';
 import { ApiAdapter } from '../src/adapters/ApiAdapter.js';
 
 // Mock localStorage
+let store = {};
 const localStorageMock = {
-    getItem: (key) => 'test-key',
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+        store[key] = value.toString();
+    },
+    clear: () => {
+        store = {};
+    }
 };
+global.localStorage = localStorageMock;
 
 // Mock global fetch
 global.fetch = async (url, options) => {
@@ -53,19 +61,20 @@ async function runTests() {
     orchestrator.registerProvider(openaiAdapter);
     orchestrator.registerProvider(geminiAdapter);
 
-    // Test 1: Default provider selection
-    if (orchestrator.activeProviderIds[0] !== 'openai') {
-        console.error('Test 1 Failed: Default provider should be openai');
+    // Test 1: Add participant
+    orchestrator.addParticipant('openai');
+    if (orchestrator.hangarParticipantIds[0] !== 'openai') {
+        console.error('Test 1 Failed: Add participant');
     } else {
-        console.log('Test 1 Passed: Default provider');
+        console.log('Test 1 Passed: Add participant');
     }
 
-    // Test 2: Switch provider
-    orchestrator.setActiveProviders(['gemini']);
-    if (orchestrator.activeProviderIds[0] !== 'gemini') {
-         console.error('Test 2 Failed: Provider switch');
+    // Test 2: Set participants
+    orchestrator.setHangarParticipants(['gemini']);
+    if (orchestrator.hangarParticipantIds[0] !== 'gemini') {
+         console.error('Test 2 Failed: Set participants');
     } else {
-        console.log('Test 2 Passed: Provider switch');
+        console.log('Test 2 Passed: Set participants');
     }
 
     // Test 3: Send message to Gemini
@@ -95,7 +104,7 @@ async function runTests() {
     }
 
     // Test 5: Passive by Default
-    orchestrator.setActiveProviders(['openai', 'gemini']);
+    orchestrator.setHangarParticipants(['openai', 'gemini']);
     try {
         let dispatchCalled = false;
         await orchestrator.dispatch('Hello All', [], (result) => {
@@ -112,7 +121,7 @@ async function runTests() {
     }
 
     // Test 6: Broadcast to both providers
-    orchestrator.setActiveProviders(['openai', 'gemini']);
+    orchestrator.setHangarParticipants(['openai', 'gemini']);
     try {
         const results = new Map();
         await orchestrator.dispatch('Hello @all', ['openai', 'gemini'], (result) => {

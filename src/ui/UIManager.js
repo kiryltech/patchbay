@@ -10,6 +10,10 @@ export class UIManager {
         this.scratchpad = document.getElementById('scratchpad');
         this.pipeActionsContainer = document.getElementById('pipe-actions-container');
         this.autocompletePopup = document.getElementById('autocomplete-popup');
+        this.addAgentButton = document.getElementById('add-agent-button');
+        this.agentCatalogModal = document.getElementById('agent-catalog-modal');
+        this.closeCatalogButton = document.getElementById('close-catalog-button');
+        this.agentCatalogList = document.getElementById('agent-catalog-list');
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
@@ -46,6 +50,9 @@ export class UIManager {
                 this.closeAutocomplete();
             }
         });
+
+        this.addAgentButton.addEventListener('click', () => this.openCatalog());
+        this.closeCatalogButton.addEventListener('click', () => this.closeCatalog());
     }
 
     handleKeydown(e) {
@@ -143,11 +150,11 @@ export class UIManager {
 
         if (match) {
             const query = match[1].toLowerCase();
-            const providers = this.orchestrator.getProviders();
+            const participants = this.orchestrator.getActiveProviders();
             const suggestions = [
                 { name: 'all', type: 'alias' },
                 { name: 'everyone', type: 'alias' },
-                ...providers.map(p => ({ name: p.name.replace(/\s+/g, ''), type: 'agent', id: p.id, displayName: p.name }))
+                ...participants.map(p => ({ name: p.name.replace(/\s+/g, ''), type: 'agent', id: p.id, displayName: p.name }))
             ];
 
             const filtered = suggestions.filter(s => s.name.toLowerCase().startsWith(query));
@@ -334,38 +341,88 @@ export class UIManager {
         const listContainer = document.getElementById('agent-list');
         listContainer.innerHTML = ''; // Clear mock
 
-        const providers = this.orchestrator.getProviders();
-        providers.forEach(p => {
+        const participants = this.orchestrator.getActiveProviders();
+        if (participants.length === 0) {
+            listContainer.innerHTML = `
+                <div class="text-center text-xs text-gray-500 p-4">
+                    The Hangar is empty.
+                    <button id="add-agent-quick-button" class="text-primary font-semibold hover:underline">Add an agent</button>
+                    to get started.
+                </div>`;
+            document.getElementById('add-agent-quick-button').addEventListener('click', () => this.openCatalog());
+            return;
+        }
+
+        participants.forEach(p => {
             const div = document.createElement('div');
-            const isActive = this.orchestrator.activeProviderIds.includes(p.id);
-            // Basic card
-            div.className = `group flex flex-col gap-2 p-3 rounded bg-surface-darker border ${isActive ? 'border-primary' : 'border-border-dark'} hover:border-primary/40 transition-colors cursor-pointer`;
+            const visuals = this.agentVisuals.get(p.id);
+            div.className = `group flex items-center justify-between p-2 rounded bg-surface-darker border border-border-dark hover:border-primary/40 transition-colors`;
             div.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span class="size-2 rounded-full ${p.mode === 'API' ? 'bg-status-green' : 'bg-status-orange'}"></span>
-                        <span class="font-bold text-sm">${p.name}</span>
+                <div class="flex items-center gap-2">
+                    <div class="size-7 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
+                        <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
                     </div>
-                    ${isActive ?
-                        '<span class="material-symbols-outlined text-primary" style="font-size: 24px;">toggle_on</span>' :
-                        '<span class="material-symbols-outlined text-gray-600" style="font-size: 24px;">toggle_off</span>'}
+                    <span class="font-semibold text-sm text-gray-200">${p.name}</span>
                 </div>
-                <div class="flex justify-between items-center text-[10px] font-mono text-gray-500">
-                    <span class="bg-[#1e293b] px-1.5 py-0.5 rounded text-gray-300">${p.mode} MODE</span>
-                </div>
+                <button class="remove-agent-button invisible group-hover:visible text-gray-500 hover:text-red-500 transition-colors" data-id="${p.id}">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                </button>
             `;
 
-            div.addEventListener('click', () => {
-                const currentActive = this.orchestrator.activeProviderIds;
-                if (currentActive.includes(p.id)) {
-                    this.orchestrator.setActiveProviders(currentActive.filter(id => id !== p.id));
-                } else {
-                    this.orchestrator.setActiveProviders([...currentActive, p.id]);
-                }
+            div.querySelector('.remove-agent-button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const providerId = e.currentTarget.dataset.id;
+                this.orchestrator.removeParticipant(providerId);
                 this.renderAgentList();
             });
 
             listContainer.appendChild(div);
+        });
+    }
+
+    openCatalog() {
+        this.renderAgentCatalog();
+        this.agentCatalogModal.classList.remove('hidden');
+    }
+
+    closeCatalog() {
+        this.agentCatalogModal.classList.add('hidden');
+    }
+
+    renderAgentCatalog() {
+        this.agentCatalogList.innerHTML = '';
+        const allProviders = this.orchestrator.getProviders();
+        const hangarIds = this.orchestrator.hangarParticipantIds;
+
+        allProviders.forEach(p => {
+            const isParticipant = hangarIds.includes(p.id);
+            const visuals = this.agentVisuals.get(p.id);
+            const button = document.createElement('button');
+            button.className = `w-full flex items-center justify-between p-3 rounded bg-surface-darker border border-border-dark hover:border-primary/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`;
+            button.disabled = isParticipant;
+            button.innerHTML = `
+                <div class="flex items-center gap-3 text-left">
+                    <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
+                        <span class="material-symbols-outlined text-base" style="color: ${visuals.color};">${visuals.icon}</span>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-200">${p.name}</div>
+                        <div class="text-xs text-gray-500 font-mono">${p.id}</div>
+                    </div>
+                </div>
+                ${isParticipant ?
+                    '<span class="material-symbols-outlined text-green-500">check_circle</span>' :
+                    '<span class="material-symbols-outlined text-gray-600">add_circle_outline</span>'}
+            `;
+
+            if (!isParticipant) {
+                button.addEventListener('click', () => {
+                    this.orchestrator.addParticipant(p.id);
+                    this.renderAgentList();
+                    this.closeCatalog();
+                });
+            }
+            this.agentCatalogList.appendChild(button);
         });
     }
 

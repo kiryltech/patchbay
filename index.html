@@ -76,8 +76,8 @@
 <div class="p-4 border-b border-border-dark">
 <h2 class="text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">The Hangar</h2>
 <div class="flex justify-between items-center">
-<p class="text-sm font-semibold text-gray-300">Active Agents</p>
-<button class="text-primary hover:text-white transition-colors">
+<p class="text-sm font-semibold text-gray-300">Hangar Participants</p>
+<button id="add-agent-button" class="text-primary hover:text-white transition-colors">
 <span class="material-symbols-outlined" style="font-size: 18px;">add_circle</span>
 </button>
 </div>
@@ -163,5 +163,19 @@
 </div>
 </aside>
 </main>
+<!-- Agent Catalog Modal -->
+<div id="agent-catalog-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+    <div class="bg-surface-dark border border-border-dark rounded-lg shadow-2xl w-full max-w-md">
+        <div class="p-4 border-b border-border-dark flex justify-between items-center">
+            <h3 class="text-base font-semibold">Agent Catalog</h3>
+            <button id="close-catalog-button" class="text-gray-500 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="agent-catalog-list" class="p-4 max-h-[60vh] overflow-y-auto">
+            <!-- Dynamic catalog content -->
+        </div>
+    </div>
+</div>
 <script type="module" src="/src/main.js"></script>
 </body></html>
