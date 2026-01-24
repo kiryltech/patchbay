@@ -47,23 +47,42 @@ export class AnalyticsUI {
             <div class="space-y-4">
                 ${Object.entries(analytics.agents).map(([agentId, agentData]) => `
                     <div class="bg-surface-darker p-3 rounded-lg border border-border-dark">
-                        <h4 class="font-semibold text-gray-200">${agentId}</h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-semibold text-gray-200">${agentId}</h4>
+                            <span class="text-xs font-mono text-gray-400">${agentData.requests} reqs</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-3 text-xs">
                             <div>
-                                <span class="text-gray-500">Requests</span>
-                                <p class="font-mono text-gray-300">${agentData.requests}</p>
+                                <p class="text-gray-400 font-mono">TOKENS</p>
+                                <div class="flex justify-between items-center mt-1">
+                                    <span class="text-gray-500">Input</span>
+                                    <span class="font-mono text-gray-300">${agentData.inputTokens.toLocaleString()}</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-1">
+                                    <span class="text-gray-500">Output</span>
+                                    <span class="font-mono text-gray-300">${agentData.outputTokens.toLocaleString()}</span>
+                                </div>
+                                 <div class="border-t border-border-dark my-1"></div>
+                                <div class="flex justify-between items-center font-bold">
+                                    <span class="text-gray-400">Total</span>
+                                    <span class="font-mono text-gray-200">${agentData.totalTokens.toLocaleString()}</span>
+                                </div>
                             </div>
                             <div>
-                                <span class="text-gray-500">Tokens</span>
-                                <p class="font-mono text-gray-300">${agentData.totalTokens.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <span class="text-gray-500">Avg Latency</span>
-                                <p class="font-mono text-gray-300">${agentData.averageLatency.toFixed(0)} ms</p>
-                            </div>
-                            <div>
-                                <span class="text-gray-500">Cost</span>
-                                <p class="font-mono text-gray-300">$${agentData.estimatedCost.toFixed(4)}</p>
+                                <p class="text-gray-400 font-mono">EST. COST</p>
+                                <div class="flex justify-between items-center mt-1">
+                                    <span class="text-gray-500">Input</span>
+                                    <span class="font-mono text-gray-300">$${(agentData.inputCost || 0).toFixed(4)}</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-1">
+                                    <span class="text-gray-500">Output</span>
+                                    <span class="font-mono text-gray-300">$${(agentData.outputCost || 0).toFixed(4)}</span>
+                                </div>
+                                <div class="border-t border-border-dark my-1"></div>
+                                <div class="flex justify-between items-center font-bold">
+                                    <span class="text-gray-400">Total</span>
+                                    <span class="font-mono text-gray-200">$${agentData.estimatedCost.toFixed(4)}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
