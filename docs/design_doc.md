@@ -225,7 +225,11 @@ The service worker now has **two** responsibilities:
 ### Phase 4: Analytics & Optimization
 
 * **Usage Tracking:** Track token usage, request counts, and estimated costs per provider.
+
+    * **Explicit Separation:** Track and display input tokens, output tokens, input cost, and output cost separately for each agent.
+
 * **Performance:** Monitor API latency and response times.
+
 * **Optimization:** Tools for prompt engineering and cost reduction.
 
 ### Phase 5: Browser Integration (The Bridge)
