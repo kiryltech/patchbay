@@ -157,10 +157,14 @@ export class ApiAdapter {
         const data = await response.json();
         const latency = Date.now() - startTime;
 
-        // Gemini API v1beta doesn't provide token usage in the main response.
-        // For this implementation, we will skip recording token usage for Gemini.
-        // A more advanced implementation would require a separate call to a token counting endpoint.
-        this.analyticsManager.recordRequest(this.id, 0, 0, latency);
+        const usage = data.usageMetadata;
+        if (usage) {
+            const inputTokens = usage.promptTokenCount || 0;
+            const outputTokens = usage.candidatesTokenCount || (usage.totalTokenCount ? usage.totalTokenCount - inputTokens : 0);
+            this.analyticsManager.recordRequest(this.id, inputTokens, outputTokens, latency);
+        } else {
+            this.analyticsManager.recordRequest(this.id, 0, 0, latency);
+        }
 
         if (data.candidates && data.candidates.length > 0) {
             return data.candidates[0].content.parts[0].text;
