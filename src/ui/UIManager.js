@@ -14,6 +14,7 @@ export class UIManager {
         this.agentCatalogModal = document.getElementById('agent-catalog-modal');
         this.closeCatalogButton = document.getElementById('close-catalog-button');
         this.agentCatalogList = document.getElementById('agent-catalog-list');
+        this.exportSessionButton = document.getElementById('export-session-button');
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
@@ -53,6 +54,30 @@ export class UIManager {
 
         this.addAgentButton.addEventListener('click', () => this.openCatalog());
         this.closeCatalogButton.addEventListener('click', () => this.closeCatalog());
+        
+        if (this.exportSessionButton) {
+            this.exportSessionButton.addEventListener('click', () => this.exportSession());
+        }
+    }
+
+    exportSession() {
+        const history = this.orchestrator.getConversationHistory();
+        if (!history || history.length === 0) {
+            alert("No conversation history to export.");
+            return;
+        }
+
+        const data = JSON.stringify(history, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patchbay-session-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     handleKeydown(e) {
