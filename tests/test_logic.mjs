@@ -14,6 +14,11 @@ const localStorageMock = {
 };
 global.localStorage = localStorageMock;
 
+// Mock AnalyticsManager
+const analyticsManagerMock = {
+    recordRequest: () => {},
+};
+
 // Mock global fetch
 global.fetch = async (url, options) => {
     if (url.includes('openai')) {
@@ -40,6 +45,9 @@ async function runTests() {
 
     const orchestrator = new Orchestrator();
 
+    localStorageMock.setItem('openai_key', 'test_key');
+    localStorageMock.setItem('gemini_key', 'test_key');
+
     const openaiAdapter = new ApiAdapter({
         id: 'openai',
         name: 'OpenAI',
@@ -47,7 +55,7 @@ async function runTests() {
         endpoint: 'http://localhost:3000/api/openai',
         model: 'gpt-4',
         getApiKey: () => localStorageMock.getItem('openai_key')
-    });
+    }, analyticsManagerMock);
 
     const geminiAdapter = new ApiAdapter({
         id: 'gemini',
@@ -56,7 +64,7 @@ async function runTests() {
         endpoint: 'http://localhost:3000/api/google',
         model: 'gemini-pro',
         getApiKey: () => localStorageMock.getItem('gemini_key')
-    });
+    }, analyticsManagerMock);
 
     orchestrator.registerProvider(openaiAdapter);
     orchestrator.registerProvider(geminiAdapter);

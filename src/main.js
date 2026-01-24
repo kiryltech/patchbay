@@ -2,11 +2,13 @@ import { Orchestrator } from './core/Orchestrator.js';
 import { ApiAdapter } from './adapters/ApiAdapter.js';
 import { SettingsUI } from './ui/SettingsUI.js';
 import { UIManager } from './ui/UIManager.js';
+import { AnalyticsManager } from './core/AnalyticsManager.js';
 
 // Initialize Components
 const settingsUI = new SettingsUI();
 const orchestrator = new Orchestrator();
-const uiManager = new UIManager(orchestrator);
+const analyticsManager = new AnalyticsManager();
+const uiManager = new UIManager(orchestrator, analyticsManager);
 
 // Register Providers
 // Note: We use the local proxy address for endpoints.
@@ -19,7 +21,7 @@ const gpt5Pro = new ApiAdapter({
     endpoint: 'http://localhost:3000/api/openai',
     model: 'gpt-5.2-pro',
     getApiKey: () => settingsUI.getOpenAIKey()
-});
+}, analyticsManager);
 
 const gpt5Mini = new ApiAdapter({
     id: 'openai-gpt-5-mini',
@@ -28,7 +30,7 @@ const gpt5Mini = new ApiAdapter({
     endpoint: 'http://localhost:3000/api/openai',
     model: 'gpt-5-mini',
     getApiKey: () => settingsUI.getOpenAIKey()
-});
+}, analyticsManager);
 
 // Gemini Models (2026)
 const gemini3Pro = new ApiAdapter({
@@ -38,7 +40,7 @@ const gemini3Pro = new ApiAdapter({
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemini-3-pro',
     getApiKey: () => settingsUI.getGeminiKey()
-});
+}, analyticsManager);
 
 const gemini3Flash = new ApiAdapter({
     id: 'google-gemini-3-flash',
@@ -47,7 +49,7 @@ const gemini3Flash = new ApiAdapter({
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemini-3-flash-preview', // Using preview endpoint
     getApiKey: () => settingsUI.getGeminiKey()
-});
+}, analyticsManager);
 
 const gemini25Flash = new ApiAdapter({
     id: 'google-gemini-2.5-flash',
@@ -56,7 +58,7 @@ const gemini25Flash = new ApiAdapter({
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemini-2.5-flash', // Current production flash
     getApiKey: () => settingsUI.getGeminiKey()
-});
+}, analyticsManager);
 
 const gemma3 = new ApiAdapter({
     id: 'google-gemma-3-27b',
@@ -65,7 +67,7 @@ const gemma3 = new ApiAdapter({
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemma-3-27b-it',
     getApiKey: () => settingsUI.getGeminiKey()
-});
+}, analyticsManager);
 
 orchestrator.registerProvider(gpt5Pro);
 orchestrator.registerProvider(gpt5Mini);

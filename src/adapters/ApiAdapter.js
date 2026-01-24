@@ -12,8 +12,9 @@ export class ApiAdapter {
      * @param {string} config.endpoint
      * @param {string} config.model
      * @param {function(): string|null} config.getApiKey
+     * @param {import('../core/AnalyticsManager').AnalyticsManager} analyticsManager
      */
-    constructor(config) {
+    constructor(config, analyticsManager) {
         this.id = config.id;
         this.name = config.name;
         this.handle = '@' + this.name.replace(/\s+/g, '');
@@ -22,6 +23,7 @@ export class ApiAdapter {
         this.endpoint = config.endpoint;
         this.model = config.model;
         this.getApiKey = config.getApiKey;
+        this.analyticsManager = analyticsManager;
     }
 
     /**
@@ -85,6 +87,7 @@ export class ApiAdapter {
     }
 
     async _sendOpenAI(text, formattedHistory, apiKey) {
+        const startTime = Date.now();
         const systemMessage = {
             role: 'system',
             content: `You are ${this.handle} (${this.name}). Answer the user's questions clearly and concisely.`
@@ -110,10 +113,16 @@ export class ApiAdapter {
         }
 
         const data = await response.json();
+        const latency = Date.now() - startTime;
+        const usage = data.usage;
+        if (usage) {
+            this.analyticsManager.recordRequest(this.id, usage.prompt_tokens, usage.completion_tokens, latency);
+        }
         return data.choices[0].message.content;
     }
 
     async _sendGemini(text, formattedHistory, apiKey) {
+        const startTime = Date.now();
         const systemMessage = `You are ${this.handle} (${this.name}). Answer the user's questions clearly and concisely.`;
         
         const contents = formattedHistory.map(msg => ({
@@ -146,6 +155,17 @@ export class ApiAdapter {
         }
 
         const data = await response.json();
+        const latency = Date.now() - startTime;
+
+        const usage = data.usageMetadata;
+        if (usage) {
+            const inputTokens = usage.promptTokenCount || 0;
+            const outputTokens = usage.candidatesTokenCount || (usage.totalTokenCount ? usage.totalTokenCount - inputTokens : 0);
+            this.analyticsManager.recordRequest(this.id, inputTokens, outputTokens, latency);
+        } else {
+            this.analyticsManager.recordRequest(this.id, 0, 0, latency);
+        }
+
         if (data.candidates && data.candidates.length > 0) {
             return data.candidates[0].content.parts[0].text;
         }
