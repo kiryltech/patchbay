@@ -10,7 +10,7 @@ export class Orchestrator {
         /** @type {Message[]} */
         this.conversationHistory = [];
         /** @type {string[]} */
-        this.activeProviderIds = [];
+        this.hangarParticipantIds = [];
     }
 
     /**
@@ -19,19 +19,42 @@ export class Orchestrator {
      */
     registerProvider(provider) {
         this.providers.set(provider.id, provider);
-        if (this.activeProviderIds.length === 0) {
-            this.activeProviderIds.push(provider.id);
-        }
         console.log(`[Orchestrator] Registered provider: ${provider.id}`);
     }
 
     /**
-     * Sets the active providers.
+     * Sets the hangar participants.
      * @param {string[]} providerIds
      */
-    setActiveProviders(providerIds) {
-        this.activeProviderIds = providerIds.filter(id => this.providers.has(id));
-        console.log(`[Orchestrator] Active providers set to: ${this.activeProviderIds.join(', ')}`);
+    setHangarParticipants(providerIds) {
+        this.hangarParticipantIds = providerIds.filter(id => this.providers.has(id));
+        console.log(`[Orchestrator] Hangar participants set to: ${this.hangarParticipantIds.join(', ')}`);
+        this._saveHangarState();
+    }
+
+    /**
+     * Adds a participant to the hangar.
+     * @param {string} providerId
+     */
+    addParticipant(providerId) {
+        if (this.providers.has(providerId) && !this.hangarParticipantIds.includes(providerId)) {
+            this.hangarParticipantIds.push(providerId);
+            console.log(`[Orchestrator] Added participant: ${providerId}`);
+            this._saveHangarState();
+        }
+    }
+
+    /**
+     * Removes a participant from the hangar.
+     * @param {string} providerId
+     */
+    removeParticipant(providerId) {
+        const index = this.hangarParticipantIds.indexOf(providerId);
+        if (index > -1) {
+            this.hangarParticipantIds.splice(index, 1);
+            console.log(`[Orchestrator] Removed participant: ${providerId}`);
+            this._saveHangarState();
+        }
     }
 
     /**
@@ -39,7 +62,7 @@ export class Orchestrator {
      * @returns {AIProvider[]}
      */
     getActiveProviders() {
-        return this.activeProviderIds.map(id => this.providers.get(id));
+        return this.hangarParticipantIds.map(id => this.providers.get(id));
     }
 
     /**
@@ -104,5 +127,13 @@ export class Orchestrator {
     clearConversationHistory() {
         this.conversationHistory = [];
         console.log('[Orchestrator] Cleared conversation history.');
+    }
+
+    /**
+     * Saves the current hangar participant IDs to localStorage.
+     * @private
+     */
+    _saveHangarState() {
+        localStorage.setItem('hangarParticipantIds', JSON.stringify(this.hangarParticipantIds));
     }
 }
