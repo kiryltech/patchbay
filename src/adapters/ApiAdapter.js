@@ -87,7 +87,7 @@ export class ApiAdapter {
     async _sendOpenAI(text, formattedHistory, apiKey) {
         const systemMessage = {
             role: 'system',
-            content: `You are ${this.handle} (${this.name}). You are participating in a group chat with a user and other AI agents. When responding, speak directly to the group. Keep your responses concise.`
+            content: `You are ${this.handle} (${this.name}). Answer the user's questions clearly and concisely.`
         };
         
         const messages = [systemMessage, ...formattedHistory];
@@ -114,7 +114,7 @@ export class ApiAdapter {
     }
 
     async _sendGemini(text, formattedHistory, apiKey) {
-        const systemMessage = `You are ${this.handle} (${this.name}). You are participating in a group chat with a user and other AI agents. When responding, speak directly to the group. Keep your responses concise.`;
+        const systemMessage = `You are ${this.handle} (${this.name}). Answer the user's questions clearly and concisely.`;
         
         const contents = formattedHistory.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : 'user',
