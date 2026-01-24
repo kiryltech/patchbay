@@ -16,7 +16,7 @@ export class AnalyticsManager {
         localStorage.setItem('patchbay-analytics', JSON.stringify(this.analytics));
     }
 
-    recordRequest(providerId, inputTokens, outputTokens, latency) {
+    recordRequest(providerId, inputTokens, outputTokens, latency, pricing) {
         if (!this.analytics.agents[providerId]) {
             this.analytics.agents[providerId] = {
                 requests: 0,
@@ -37,7 +37,7 @@ export class AnalyticsManager {
         agent.totalLatency += latency;
         agent.averageLatency = agent.totalLatency / agent.requests;
 
-        const cost = this.calculateCost(providerId, inputTokens, outputTokens);
+        const cost = this.calculateCost(inputTokens, outputTokens, pricing);
         agent.estimatedCost += cost;
         this.analytics.totalCost += cost;
 
@@ -58,22 +58,10 @@ export class AnalyticsManager {
         this.saveAnalytics();
     }
 
-    calculateCost(providerId, inputTokens, outputTokens) {
-        // Pricing based on 2026 estimates
-        const pricing = {
-            'openai-gpt-5.2-pro': { input: 5.00 / 1_000_000, output: 15.00 / 1_000_000 },
-            'openai-gpt-5-mini': { input: 0.50 / 1_000_000, output: 1.50 / 1_000_000 },
-            'google-gemini-3-pro': { input: 4.00 / 1_000_000, output: 12.00 / 1_000_000 },
-            'google-gemini-3-flash': { input: 0.40 / 1_000_000, output: 1.20 / 1_000_000 },
-            'google-gemini-2.5-flash': { input: 0.35 / 1_000_000, output: 1.05 / 1_000_000 },
-            'google-gemma-3-27b': { input: 0.30 / 1_000_000, output: 0.90 / 1_000_000 }
-        };
-
-        const modelPricing = pricing[providerId];
-        if (!modelPricing) {
+    calculateCost(inputTokens, outputTokens, pricing) {
+        if (!pricing) {
             return 0;
         }
-
-        return (inputTokens * modelPricing.input) + (outputTokens * modelPricing.output);
+        return (inputTokens * pricing.input) + (outputTokens * pricing.output);
     }
 }

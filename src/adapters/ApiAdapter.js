@@ -11,6 +11,7 @@ export class ApiAdapter {
      * @param {'openai'|'gemini'} config.type
      * @param {string} config.endpoint
      * @param {string} config.model
+     * @param {Object} config.pricing
      * @param {function(): string|null} config.getApiKey
      * @param {import('../core/AnalyticsManager').AnalyticsManager} analyticsManager
      */
@@ -22,6 +23,7 @@ export class ApiAdapter {
         this.type = config.type;
         this.endpoint = config.endpoint;
         this.model = config.model;
+        this.pricing = config.pricing || { input: 0, output: 0 };
         this.getApiKey = config.getApiKey;
         this.analyticsManager = analyticsManager;
     }
@@ -116,7 +118,7 @@ export class ApiAdapter {
         const latency = Date.now() - startTime;
         const usage = data.usage;
         if (usage) {
-            this.analyticsManager.recordRequest(this.id, usage.prompt_tokens, usage.completion_tokens, latency);
+            this.analyticsManager.recordRequest(this.id, usage.prompt_tokens, usage.completion_tokens, latency, this.pricing);
         }
         return data.choices[0].message.content;
     }
@@ -161,9 +163,9 @@ export class ApiAdapter {
         if (usage) {
             const inputTokens = usage.promptTokenCount || 0;
             const outputTokens = usage.candidatesTokenCount || (usage.totalTokenCount ? usage.totalTokenCount - inputTokens : 0);
-            this.analyticsManager.recordRequest(this.id, inputTokens, outputTokens, latency);
+            this.analyticsManager.recordRequest(this.id, inputTokens, outputTokens, latency, this.pricing);
         } else {
-            this.analyticsManager.recordRequest(this.id, 0, 0, latency);
+            this.analyticsManager.recordRequest(this.id, 0, 0, latency, this.pricing);
         }
 
         if (data.candidates && data.candidates.length > 0) {

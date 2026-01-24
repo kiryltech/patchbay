@@ -20,6 +20,7 @@ const gpt5Pro = new ApiAdapter({
     type: 'openai',
     endpoint: 'http://localhost:3000/api/openai',
     model: 'gpt-5.2-pro',
+    pricing: { input: 5.00 / 1_000_000, output: 15.00 / 1_000_000 },
     getApiKey: () => settingsUI.getOpenAIKey()
 }, analyticsManager);
 
@@ -29,6 +30,7 @@ const gpt5Mini = new ApiAdapter({
     type: 'openai',
     endpoint: 'http://localhost:3000/api/openai',
     model: 'gpt-5-mini',
+    pricing: { input: 0.50 / 1_000_000, output: 1.50 / 1_000_000 },
     getApiKey: () => settingsUI.getOpenAIKey()
 }, analyticsManager);
 
@@ -39,6 +41,7 @@ const gemini3Pro = new ApiAdapter({
     type: 'gemini',
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemini-3-pro',
+    pricing: { input: 4.00 / 1_000_000, output: 12.00 / 1_000_000 },
     getApiKey: () => settingsUI.getGeminiKey()
 }, analyticsManager);
 
@@ -48,6 +51,7 @@ const gemini3Flash = new ApiAdapter({
     type: 'gemini',
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemini-3-flash-preview', // Using preview endpoint
+    pricing: { input: 0.40 / 1_000_000, output: 1.20 / 1_000_000 },
     getApiKey: () => settingsUI.getGeminiKey()
 }, analyticsManager);
 
@@ -57,6 +61,7 @@ const gemini25Flash = new ApiAdapter({
     type: 'gemini',
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemini-2.5-flash', // Current production flash
+    pricing: { input: 0.35 / 1_000_000, output: 1.05 / 1_000_000 },
     getApiKey: () => settingsUI.getGeminiKey()
 }, analyticsManager);
 
@@ -66,6 +71,7 @@ const gemma3 = new ApiAdapter({
     type: 'gemini',
     endpoint: 'http://localhost:3000/api/google',
     model: 'gemma-3-27b-it',
+    pricing: { input: 0.30 / 1_000_000, output: 0.90 / 1_000_000 },
     getApiKey: () => settingsUI.getGeminiKey()
 }, analyticsManager);
 

@@ -19,11 +19,8 @@ export class UIManager {
         this.agentCatalogModal = document.getElementById('agent-catalog-modal');
         this.closeCatalogButton = document.getElementById('close-catalog-button');
         this.agentCatalogList = document.getElementById('agent-catalog-list');
-<<<<<<< HEAD
         this.exportSessionButton = document.getElementById('export-session-button');
-=======
         this.analyticsButton = document.getElementById('analytics-button');
->>>>>>> a6a1bdb (feat: Implement Phase 4 - Analytics & Optimization)
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
@@ -63,10 +60,12 @@ export class UIManager {
 
         this.addAgentButton.addEventListener('click', () => this.openCatalog());
         this.closeCatalogButton.addEventListener('click', () => this.closeCatalog());
-<<<<<<< HEAD
         
         if (this.exportSessionButton) {
             this.exportSessionButton.addEventListener('click', () => this.exportSession());
+        }
+        if (this.analyticsButton) {
+            this.analyticsButton.addEventListener('click', () => this.analyticsUI.open());
         }
     }
 
@@ -88,9 +87,6 @@ export class UIManager {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-=======
-        this.analyticsButton.addEventListener('click', () => this.analyticsUI.open());
->>>>>>> a6a1bdb (feat: Implement Phase 4 - Analytics & Optimization)
     }
 
     handleKeydown(e) {
