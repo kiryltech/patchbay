@@ -226,15 +226,27 @@ The service worker now has **two** responsibilities:
 
 * **Usage Tracking:** Track token usage, request counts, and estimated costs per provider.
 
-    * **Explicit Separation:** Track and display input tokens, output tokens, input cost, and output cost separately for each agent.
+    * **Explicit Separation:** Track and display input tokens, output tokens, input cost, and output cost separately for
+      each agent.
 
 * **Performance:** Monitor API latency and response times.
 
 * **Optimization:** Tools for prompt engineering and cost reduction.
 
-### Phase 5: Browser Integration (The Bridge)
+### Phase 5: The Manual Bridge (State Transfer)
 
-* **Extension Setup:** Initialize Chrome Extension (Manifest V3).
-* **Transport Layer:** Implement "CORS Transport" in background script to replace the dev proxy.
-* **Web Mode:** Develop `WebAdapter` for DOM injection/automation of external Chat UIs.
-* **Hybrid:** Enable switching between API and Web modes.
+* **Goal:** Enable interaction with Web-only AIs (e.g., Deep Research, Canvas) via a robust "Copy/Paste" workflow that
+  tracks context state.
+* **External Agents:**
+    * Introduce `ExternalProvider` type. These agents do not have API keys.
+    * **State Tracking:** Each external agent tracks a `lastSyncedIndex` to know which part of the conversation it has
+      already "seen".
+* **The Workflow (Delta Sync):**
+    * **Transfer (Out):** User clicks "Sync/Copy". System formats all *new* messages (since `lastSyncedIndex`) into a
+      context block (e.g., "History:\n[User]: ...\n[@Claude]: ...") and copies it to the clipboard.
+    * **Action:** User pastes this into the external AI's web UI.
+    * **Import (In):** User copies the AI's response. User clicks "Paste Response" in Patchbay. System adds the message
+      to the unified history attributed to the external agent (e.g., `@GeminiWeb`).
+    * **Update:** The `lastSyncedIndex` is updated, ensuring the next transfer only sends the *new* delta.
+* **Phase 5B (Future Extension):** A Chrome Extension to automate the "Copy from Patchbay -> Paste to Web UI" and "Copy
+  from Web UI -> Paste to Patchbay" steps.
