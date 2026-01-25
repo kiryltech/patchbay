@@ -12,7 +12,6 @@ export class UIManager {
         this.messageContainer = document.getElementById('message-container');
         this.inputElement = document.getElementById('user-input');
         this.sendButton = document.getElementById('send-button');
-        this.scratchpad = document.getElementById('scratchpad');
         this.pipeActionsContainer = document.getElementById('pipe-actions-container');
         this.autocompletePopup = document.getElementById('autocomplete-popup');
         this.addAgentButton = document.getElementById('add-agent-button');

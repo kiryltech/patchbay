@@ -137,47 +137,26 @@
 </div>
 </div>
 </section>
-<!-- RIGHT PANE: The Pipeline -->
+<!-- RIGHT PANE: External Bridge -->
 <aside class="w-72 bg-[#18181b] border-l border-border-dark flex flex-col shrink-0 z-10">
             <div class="p-4 border-b border-border-dark flex justify-between items-center">
-                <h2 class="text-xs font-mono uppercase tracking-widest text-gray-500">The Pipeline</h2>
+                <h2 class="text-xs font-mono uppercase tracking-widest text-gray-500">External Bridge</h2>
                 <div class="flex gap-2">
                     <button id="export-session-button" class="text-gray-500 hover:text-white transition-colors" title="Export Session" aria-label="Export Session">
                         <span class="material-symbols-outlined text-sm">download</span>
                     </button>
                     <span class="material-symbols-outlined text-gray-500 text-sm cursor-pointer hover:text-white">history</span>
                 </div>
-            </div><!-- Scratchpad -->
+            </div><!-- External Agents Area -->
 <div class="flex-1 flex flex-col p-3 gap-3 overflow-hidden">
-<div class="flex flex-col h-1/2 gap-2">
-<label class="text-xs font-semibold text-gray-400 flex items-center gap-2">
-<span class="material-symbols-outlined text-sm">edit_note</span>
-                        Context Scratchpad
-                    </label>
-<textarea id="scratchpad" class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later..." aria-label="Context Scratchpad"></textarea>
-</div>
-<div class="h-px bg-border-dark w-full"></div>
 <!-- Pipe Actions -->
 <div class="flex-1 flex flex-col gap-3 overflow-y-auto">
 <label class="text-xs font-semibold text-gray-400 flex items-center gap-2">
 <span class="material-symbols-outlined text-sm">output</span>
-                        Pipe Actions
+                        External Agents
                     </label>
 <div id="pipe-actions-container" class="grid gap-2">
-<button class="flex items-center justify-between p-2 rounded bg-surface-dark border border-border-dark hover:border-gray-500 hover:bg-[#2e2e33] transition-all group text-left">
-<div class="flex flex-col">
-<span class="text-xs font-bold text-gray-200">Pipe to GPT-4</span>
-<span class="text-[10px] text-gray-500">Sends scratchpad as System Msg</span>
-</div>
-<span class="material-symbols-outlined text-gray-600 group-hover:text-primary" style="font-size: 18px;">arrow_forward</span>
-</button>
-<button class="flex items-center justify-between p-2 rounded bg-surface-dark border border-border-dark hover:border-gray-500 hover:bg-[#2e2e33] transition-all group text-left">
-<div class="flex flex-col">
-<span class="text-xs font-bold text-gray-200">Pipe to Gemini</span>
-<span class="text-[10px] text-gray-500">Sends scratchpad as User Msg</span>
-</div>
-<span class="material-symbols-outlined text-gray-600 group-hover:text-status-orange" style="font-size: 18px;">arrow_forward</span>
-</button>
+<!-- External agent cards rendered here -->
 </div>
 </div>
 </div>
