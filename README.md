@@ -51,6 +51,6 @@ The dashboard will be available at `http://localhost:5173` (or the port specifie
 
 - **Phase 1 (Completed):** API-First Core. Basic dashboard, API adapters, and secure key storage.
 - **Phase 2 (Completed):** Advanced Orchestration. Multi-model support and context foundation.
-- **Phase 3 (In Progress):** Collaborative UX. Group chat interface, `@Agent` targeting, unified context history, markdown rendering, and parallel streaming.
+- **Phase 3:** Collaborative UX. Group chat interface, `@Agent` targeting, unified context history, markdown rendering, and parallel streaming.
 - **Phase 4:** Analytics & Optimization. Usage tracking (tokens/cost), response time monitoring, and prompt optimization tools.
-- **Phase 5 (Future):** Browser Integration. Chrome Extension setup, CORS transport layer, and Web Mode (DOM automation).
+- **Phase 5 (Future):** The Manual Bridge. "Delta Sync" workflow for manual state transfer to external web AIs (e.g., Deep Research).
