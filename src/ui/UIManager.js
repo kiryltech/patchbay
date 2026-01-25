@@ -12,15 +12,12 @@ export class UIManager {
         this.messageContainer = document.getElementById('message-container');
         this.inputElement = document.getElementById('user-input');
         this.sendButton = document.getElementById('send-button');
-        this.scratchpad = document.getElementById('scratchpad');
         this.pipeActionsContainer = document.getElementById('pipe-actions-container');
-        this.autocompletePopup = document.getElementById('autocomplete-popup');
-        this.addAgentButton = document.getElementById('add-agent-button');
+        this.addAgentButton = document.getElementById('new-mission-button');
         this.agentCatalogModal = document.getElementById('agent-catalog-modal');
         this.closeCatalogButton = document.getElementById('close-catalog-button');
         this.agentCatalogList = document.getElementById('agent-catalog-list');
-        this.exportSessionButton = document.getElementById('export-session-button');
-        this.analyticsButton = document.getElementById('analytics-button');
+        this.settingsButton = document.getElementById('settings-button');
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
@@ -51,22 +48,8 @@ export class UIManager {
 
         this.inputElement.addEventListener('input', () => this.handleAutocomplete());
 
-        // Hide autocomplete when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!this.inputElement.contains(e.target) && !this.autocompletePopup.contains(e.target)) {
-                this.closeAutocomplete();
-            }
-        });
-
         this.addAgentButton.addEventListener('click', () => this.openCatalog());
         this.closeCatalogButton.addEventListener('click', () => this.closeCatalog());
-        
-        if (this.exportSessionButton) {
-            this.exportSessionButton.addEventListener('click', () => this.exportSession());
-        }
-        if (this.analyticsButton) {
-            this.analyticsButton.addEventListener('click', () => this.analyticsUI.open());
-        }
     }
 
     exportSession() {
@@ -264,105 +247,76 @@ export class UIManager {
     }
 
     showTypingIndicator(providerId) {
-        if (this.typingIndicators.has(providerId)) return;
-
-        const visuals = this.agentVisuals.get(providerId);
-        const provider = this.orchestrator.providers.get(providerId);
-
-        const indicator = document.createElement('div');
-        indicator.className = 'flex gap-3';
-        indicator.innerHTML = `
-            <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
-                <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
-            </div>
-            <div class="flex-1 space-y-2">
-                <div class="text-xs font-mono mb-1" style="color: ${visuals.color};">${provider.name.toUpperCase()}</div>
-                <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full">
-                    <div class="flex items-center gap-2">
-                        <div class="size-2 bg-primary rounded-full animate-pulse"></div>
-                        <div class="size-2 bg-primary rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
-                        <div class="size-2 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
-                    </div>
-                </div>
-            </div>`;
-
-        this.messageContainer.appendChild(indicator);
-        this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
-        this.typingIndicators.set(providerId, indicator);
+        const agentInList = document.querySelector(`[data-id="${providerId}"]`);
+        if (agentInList && !agentInList.querySelector('.typing-indicator')) {
+            const indicator = document.createElement('span');
+            indicator.className = 'typing-indicator ml-auto size-2 rounded-full bg-primary animate-pulse';
+            agentInList.appendChild(indicator);
+        }
     }
 
     removeTypingIndicator(providerId) {
-        if (this.typingIndicators.has(providerId)) {
-            this.typingIndicators.get(providerId).remove();
-            this.typingIndicators.delete(providerId);
+        const agentInList = document.querySelector(`[data-id="${providerId}"]`);
+        const indicator = agentInList ? agentInList.querySelector('.typing-indicator') : null;
+        if (indicator) {
+            indicator.remove();
         }
     }
 
     appendMessage(message) {
-        // Clear initial message
-        if (this.messageContainer.querySelector('.opacity-50')) {
-            this.messageContainer.innerHTML = '';
-        }
-
         const { role, content, providerId } = message;
-        const div = document.createElement('div');
-        div.className = `flex gap-3 ${role === 'user' ? 'justify-end' : ''}`;
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-        let contentHtml = '';
-
-        if (role === 'user') {
-            contentHtml = `
-                <div class="bg-surface-dark border border-border-dark rounded-lg rounded-tr-none px-4 py-3 max-w-[85%]">
-                    <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${this.escapeHtml(content)}</p>
+        if (role === 'system') {
+            const systemMessageDiv = document.createElement('div');
+            systemMessageDiv.className = 'flex justify-center';
+            systemMessageDiv.innerHTML = `<span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[11px] font-semibold text-slate-500 uppercase tracking-wider">${content}</span>`;
+            this.messageContainer.appendChild(systemMessageDiv);
+        } else if (role === 'user') {
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'flex gap-4 flex-row-reverse group';
+            userMessageDiv.innerHTML = `
+                <div class="size-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAwTAPx41g5E_vGYVGa1o-1_isrJ6sY0JbqKsfftIWxbaTJ-eyI-Jp6tV45XNh0hiHCHgtl20O2Eg-nARmFiNUcZlzgURxvlrmMzcD_EndCoc7Uiz5b87SX4WUcca9Jf_5JtcEm-OchOOyA18IuTbDt5_kWi_NJX4WurlKtjR9C29UgLkfIDz66m7Imvj5sA2jlqMB5XhuccPBMRtEf4IQ2_UUup08t6nU9VygdNTswgCjYX6YuMiRLANVKI7XgGZxLR0OrVYj7HWyK')"></div>
+                <div class="flex flex-col gap-1.5 items-end max-w-[85%]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-400 font-medium">${timeString}</span>
+                        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">You</span>
+                    </div>
+                    <div class="bg-primary text-white p-4 rounded-xl rounded-tr-none shadow-sm shadow-primary/20">
+                        <p class="text-[15px] leading-relaxed">${this.escapeHtml(content)}</p>
+                    </div>
                 </div>
-                <div class="size-8 rounded bg-gradient-to-br from-primary to-blue-700 shrink-0"></div>
             `;
+            this.messageContainer.appendChild(userMessageDiv);
         } else if (role === 'assistant') {
             const provider = this.orchestrator.providers.get(providerId);
-            const visuals = this.agentVisuals.get(providerId);
+            const agentMessageDiv = document.createElement('div');
+            agentMessageDiv.className = 'flex gap-4 group';
             const renderedContent = this.mdConverter.makeHtml(content);
-            
-            contentHtml = `
-                <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
-                    <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
+            agentMessageDiv.innerHTML = `
+                <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+                    <span class="material-symbols-outlined">${this.agentVisuals.get(providerId)?.icon || 'smart_toy'}</span>
                 </div>
-                <div class="flex-1 space-y-2">
-                    <div class="text-xs font-mono mb-1 flex justify-between items-center" style="color: ${visuals.color};">
-                        <span>${provider.name.toUpperCase()}</span>
-                        <div class="flex items-center gap-2">
-                            <button class="text-gray-600 hover:text-primary transition-colors copy-icon" aria-label="Copy message">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
-                            </button>
-                            <button class="text-gray-600 hover:text-primary transition-colors pipe-icon" aria-label="Pipe to scratchpad">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">shortcut</span>
-                            </button>
-                        </div>
+                <div class="flex flex-col gap-1.5 max-w-[85%]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">${provider.name}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${timeString}</span>
                     </div>
-                    <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full message-content prose prose-invert prose-sm max-w-none">
-                        ${renderedContent}
+                    <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-xl rounded-tl-none custom-shadow">
+                        <div class="text-slate-700 dark:text-slate-300 text-[15px] leading-relaxed message-content">${renderedContent}</div>
                     </div>
                 </div>
             `;
-        } else { // System error
-             contentHtml = `
-                <div class="flex-1 space-y-2">
-                    <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 w-full">
-                        <p class="text-sm text-red-400 font-mono">${this.escapeHtml(content)}</p>
-                    </div>
-                </div>
-            `;
+            this.messageContainer.appendChild(agentMessageDiv);
         }
 
-        div.innerHTML = contentHtml;
-        this.messageContainer.appendChild(div);
-        this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+        // Spacer for scrolling
+        const spacer = document.createElement('div');
+        spacer.className = 'h-24';
+        this.messageContainer.appendChild(spacer);
 
-        div.querySelector('.copy-icon')?.addEventListener('click', () => {
-            navigator.clipboard.writeText(content);
-        });
-        div.querySelector('.pipe-icon')?.addEventListener('click', () => {
-            this.scratchpad.value = content;
-        });
+        this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
     }
 
     escapeHtml(text) {
@@ -382,42 +336,43 @@ export class UIManager {
 
         const participants = this.orchestrator.getActiveProviders();
         if (participants.length === 0) {
-            listContainer.innerHTML = `
-                <div class="text-center text-xs text-gray-500 p-4">
-                    The Hangar is empty.
-                    <button id="add-agent-quick-button" class="text-primary font-semibold hover:underline">Add an agent</button>
-                    to get started.
-                </div>`;
-            document.getElementById('add-agent-quick-button').addEventListener('click', () => this.openCatalog());
+            listContainer.innerHTML = `<p class="px-3 py-2 text-xs text-slate-400">No active agents.</p>`;
             return;
         }
 
-        participants.forEach(p => {
-            const div = document.createElement('div');
+        participants.forEach((p, index) => {
+            const link = document.createElement('a');
+            link.href = '#';
+            const isActive = index === 0; // Assuming the first agent is active for now
+            link.className = `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`;
+
             const visuals = this.agentVisuals.get(p.id);
-            div.className = `group flex items-center justify-between p-2 rounded bg-surface-darker border border-border-dark hover:border-primary/40 transition-colors`;
-            const icon = p.mode === 'EXTERNAL' ? 'sync_alt' : visuals.icon;
-            div.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <div class="size-7 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
-                        <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${icon}</span>
-                    </div>
-                    <span class="font-semibold text-sm text-gray-200">${p.name}</span>
-                </div>
-                <button class="remove-agent-button invisible group-hover:visible text-gray-500 hover:text-red-500 transition-colors" data-id="${p.id}" aria-label="Remove agent">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                </button>
+            const icon = p.mode === 'EXTERNAL' ? 'sync_alt' : (visuals?.icon || 'smart_toy');
+
+            link.innerHTML = `
+                <span class="material-symbols-outlined text-xl">${icon}</span>
+                <span class="text-sm font-semibold">${p.name}</span>
+                ${isActive ? '<span class="ml-auto size-2 rounded-full bg-primary animate-pulse"></span>' : ''}
             `;
 
-            div.querySelector('.remove-agent-button').addEventListener('click', (e) => {
+            // Add a remove button (optional, can be added to a context menu or settings)
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-agent-button invisible group-hover:visible text-slate-400 hover:text-red-500 ml-auto';
+            removeButton.dataset.id = p.id;
+            removeButton.innerHTML = `<span class="material-symbols-outlined text-base">close</span>`;
+            removeButton.onclick = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                const providerId = e.currentTarget.dataset.id;
-                this.orchestrator.removeParticipant(providerId);
+                this.orchestrator.removeParticipant(p.id);
                 this.renderAgentList();
                 this.renderExternalAgents();
-            });
+            };
 
-            listContainer.appendChild(div);
+            if (!isActive) {
+                link.appendChild(removeButton);
+            }
+
+            listContainer.appendChild(link);
         });
     }
 
@@ -469,56 +424,71 @@ export class UIManager {
     }
 
     renderExternalAgents() {
-        this.pipeActionsContainer.innerHTML = '';
-        const externalAgents = this.orchestrator.getActiveProviders().filter(p => p.mode === 'EXTERNAL');
+        this.pipeActionsContainer.innerHTML = ''; // Clear content
 
-        if (externalAgents.length === 0) {
-            this.pipeActionsContainer.innerHTML = '<p class="text-xs text-gray-500 text-center p-4">No external agents active.</p>';
-            return;
-        }
-
-        externalAgents.forEach(agent => {
-            const visuals = this.agentVisuals.get(agent.id);
-            const container = document.createElement('div');
-            container.className = 'space-y-2 p-2 rounded bg-surface-darker border border-border-dark';
-
-            container.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <div class="size-7 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
-                        <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">sync_alt</span>
+        // Static content based on the design
+        this.pipeActionsContainer.innerHTML = `
+            <div class.space-y-8">
+                <!-- Status Toggles -->
+                <div class="space-y-4">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Connections</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">link</span>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">API Gateway</span>
+                        </div>
+                        <div class="h-5 w-9 bg-primary/20 rounded-full relative p-0.5">
+                            <div class="size-4 bg-primary rounded-full translate-x-4"></div>
+                        </div>
                     </div>
-                    <span class="font-semibold text-sm text-gray-200">${agent.name}</span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-slate-400">database</span>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Memory Sync</span>
+                        </div>
+                        <div class="h-5 w-9 bg-slate-200 dark:bg-slate-700 rounded-full relative p-0.5">
+                            <div class="size-4 bg-white rounded-full"></div>
+                        </div>
+                    </div>
                 </div>
-                <button class="w-full text-center bg-primary/20 text-primary hover:bg-primary/30 text-xs font-bold py-2 px-3 rounded transition-colors sync-button">
-                    Copy Delta Context
-                </button>
-                <textarea class="w-full bg-[#1e1e1e] border border-border-dark rounded p-2 text-xs" rows="3" placeholder="Paste response from ${agent.name} here..."></textarea>
-                <button class="w-full bg-gray-600 hover:bg-gray-500 text-white text-xs font-bold py-2 px-3 rounded transition-colors paste-button">
-                    Submit Response
-                </button>
-            `;
 
-            const syncButton = container.querySelector('.sync-button');
-            const pasteButton = container.querySelector('.paste-button');
-            const textarea = container.querySelector('textarea');
+                <!-- Export Options -->
+                <div class="space-y-4">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Manage Session</p>
+                    <button id="export-session-button" class="w-full flex items-center gap-3 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-lg">download</span>
+                        Export Session
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-lg">share</span>
+                        Share Bridge
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-2 border border-rose-100 dark:border-rose-900 text-rose-500 rounded-lg text-sm font-medium hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                        <span class="material-symbols-outlined text-lg">stop_circle</span>
+                        Terminate Bridge
+                    </button>
+                </div>
 
-            syncButton.addEventListener('click', () => {
-                const context = agent.getDeltaContext(this.orchestrator.getConversationHistory());
-                navigator.clipboard.writeText(context);
-                syncButton.textContent = 'Copied!';
-                setTimeout(() => { syncButton.textContent = 'Copy Delta Context'; }, 2000);
-            });
+                <!-- Performance Mini-Graph -->
+                <div class="space-y-4">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Network Health</p>
+                    <div class="h-16 w-full bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden flex items-end p-1 gap-1 border border-slate-100 dark:border-slate-800">
+                        <div class="flex-1 bg-primary/20 rounded-sm h-[40%]"></div>
+                        <div class="flex-1 bg-primary/20 rounded-sm h-[60%]"></div>
+                        <div class="flex-1 bg-primary/30 rounded-sm h-[55%]"></div>
+                        <div class="flex-1 bg-primary/40 rounded-sm h-[80%]"></div>
+                        <div class="flex-1 bg-primary rounded-sm h-[95%]"></div>
+                        <div class="flex-1 bg-primary/50 rounded-sm h-[70%]"></div>
+                        <div class="flex-1 bg-primary/20 rounded-sm h-[30%]"></div>
+                    </div>
+                </div>
+            </div>
+        `;
 
-            pasteButton.addEventListener('click', () => {
-                const responseText = textarea.value.trim();
-                if (responseText) {
-                    agent.pasteResponse(responseText, this.orchestrator);
-                    this.appendMessage({ role: 'assistant', content: responseText, providerId: agent.id });
-                    textarea.value = '';
-                }
-            });
-
-            this.pipeActionsContainer.appendChild(container);
-        });
+        // Re-bind the export session button event
+        const exportButton = document.getElementById('export-session-button');
+        if (exportButton) {
+            exportButton.addEventListener('click', () => this.exportSession());
+        }
     }
 }
