@@ -170,7 +170,8 @@ export class UIManager {
 
     parseInput(text) {
         // Regex to capture @Agent Name (handling spaces if needed, though simple syntax preferred)
-        const mentionRegex = /@([a-zA-Z0-9.\-_]+|"[^"]+")/g; 
+        // Added parentheses to allow handles like @Claude(WebUI)
+        const mentionRegex = /@([a-zA-Z0-9.\-_()]+|"[^"]+")/g; 
         const matches = text.match(mentionRegex) || [];
         const targets = matches.map(m => m.replace(/"/g, '').toLowerCase());
         const cleanText = text.replace(mentionRegex, '').trim();
