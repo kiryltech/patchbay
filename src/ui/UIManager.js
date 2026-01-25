@@ -13,7 +13,7 @@ export class UIManager {
         this.inputElement = document.getElementById('user-input');
         this.sendButton = document.getElementById('send-button');
         this.pipeActionsContainer = document.getElementById('pipe-actions-container');
-        this.addAgentButton = document.getElementById('new-mission-button');
+        this.addAgentButton = document.getElementById('add-agent-button');
         this.agentCatalogModal = document.getElementById('agent-catalog-modal');
         this.closeCatalogButton = document.getElementById('close-catalog-button');
         this.agentCatalogList = document.getElementById('agent-catalog-list');
@@ -394,21 +394,21 @@ export class UIManager {
             const isParticipant = hangarIds.includes(p.id);
             const visuals = this.agentVisuals.get(p.id);
             const button = document.createElement('button');
-            button.className = `w-full flex items-center justify-between p-3 rounded bg-surface-darker border border-border-dark hover:border-primary/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`;
+            button.className = `w-full flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 hover:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
             button.disabled = isParticipant;
             button.innerHTML = `
-                <div class="flex items-center gap-3 text-left">
-                    <div class="size-8 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
-                        <span class="material-symbols-outlined text-base" style="color: ${visuals.color};">${visuals.icon}</span>
+                <div class="flex items-center gap-4 text-left">
+                    <div class="size-10 rounded-lg border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
+                        <span class="material-symbols-outlined" style="color: ${visuals.color};">${visuals.icon}</span>
                     </div>
                     <div>
-                        <div class="font-semibold text-gray-200">${p.name}</div>
-                        <div class="text-xs text-gray-500 font-mono">${p.id}</div>
+                        <div class="font-bold text-slate-700 dark:text-slate-200">${p.name}</div>
+                        <div class="text-xs text-slate-500 font-mono">${p.id}</div>
                     </div>
                 </div>
                 ${isParticipant ?
-                    '<span class="material-symbols-outlined text-green-500">check_circle</span>' :
-                    '<span class="material-symbols-outlined text-gray-600">add_circle_outline</span>'}
+                    '<span class="material-symbols-outlined text-emerald-500">check_circle</span>' :
+                    '<span class="material-symbols-outlined text-slate-400">add_circle</span>'}
             `;
 
             if (!isParticipant) {
