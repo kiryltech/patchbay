@@ -19,7 +19,7 @@ export class SettingsUI {
             <div class="bg-[#18181b] border border-border-dark rounded-lg p-6 w-96 shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-white">Settings</h2>
-                    <button id="close-settings" class="text-gray-400 hover:text-white">
+                    <button id="close-settings" class="text-gray-400 hover:text-white" aria-label="Close Settings">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
