@@ -1,5 +1,6 @@
 import { Orchestrator } from './core/Orchestrator.js';
 import { ApiAdapter } from './adapters/ApiAdapter.js';
+import { ExternalAdapter } from './adapters/ExternalAdapter.js';
 import { SettingsUI } from './ui/SettingsUI.js';
 import { UIManager } from './ui/UIManager.js';
 import { AnalyticsManager } from './core/AnalyticsManager.js';
@@ -115,6 +116,12 @@ orchestrator.registerProvider(gemma3);
 orchestrator.registerProvider(claude45Sonnet);
 orchestrator.registerProvider(claude45Haiku);
 orchestrator.registerProvider(claude45Opus);
+
+const claudeWeb = new ExternalAdapter({
+    id: 'claude-web',
+    name: 'Claude (WebUI)',
+});
+orchestrator.registerProvider(claudeWeb);
 
 // Load hangar state from localStorage
 const savedHangarIds = localStorage.getItem('hangarParticipantIds');

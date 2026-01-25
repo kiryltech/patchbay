@@ -85,7 +85,7 @@ export class Orchestrator {
 
         const providersToQuery = targetProviderIds
             .map(id => this.providers.get(id))
-            .filter(Boolean);
+            .filter(p => p && p.mode !== 'EXTERNAL');
 
         const promises = providersToQuery.map(async (provider) => {
             console.log(`[Orchestrator] Dispatching to ${provider.id}...`);
