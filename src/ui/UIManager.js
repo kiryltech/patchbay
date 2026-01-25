@@ -329,8 +329,12 @@ export class UIManager {
                     <div class="text-xs font-mono mb-1 flex justify-between items-center" style="color: ${visuals.color};">
                         <span>${provider.name.toUpperCase()}</span>
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-gray-600 hover:text-primary cursor-pointer copy-icon" style="font-size: 16px;">content_copy</span>
-                            <span class="material-symbols-outlined text-gray-600 hover:text-primary cursor-pointer pipe-icon" style="font-size: 16px;">shortcut</span>
+                            <button class="text-gray-600 hover:text-primary transition-colors copy-icon" aria-label="Copy message">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
+                            </button>
+                            <button class="text-gray-600 hover:text-primary transition-colors pipe-icon" aria-label="Pipe to scratchpad">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">shortcut</span>
+                            </button>
                         </div>
                     </div>
                     <div class="bg-[#121212] border border-border-dark rounded-lg rounded-tl-none p-4 w-full message-content prose prose-invert prose-sm max-w-none">
@@ -398,7 +402,7 @@ export class UIManager {
                     </div>
                     <span class="font-semibold text-sm text-gray-200">${p.name}</span>
                 </div>
-                <button class="remove-agent-button invisible group-hover:visible text-gray-500 hover:text-red-500 transition-colors" data-id="${p.id}">
+                <button class="remove-agent-button invisible group-hover:visible text-gray-500 hover:text-red-500 transition-colors" data-id="${p.id}" aria-label="Remove agent">
                     <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
                 </button>
             `;

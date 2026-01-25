@@ -75,13 +75,13 @@
 <span class="text-xs font-mono text-gray-300">SYSTEM ONLINE</span>
 </div>
 <div class="flex items-center gap-4">
-<button id="analytics-button" class="text-gray-400 hover:text-white transition-colors">
+<button id="analytics-button" class="text-gray-400 hover:text-white transition-colors" aria-label="Open Analytics">
     <span class="material-symbols-outlined">analytics</span>
 </button>
-<button id="settings-button" class="text-gray-400 hover:text-white transition-colors">
+<button id="settings-button" class="text-gray-400 hover:text-white transition-colors" aria-label="Open Settings">
 <span class="material-symbols-outlined">settings</span>
 </button>
-<div class="size-8 rounded-full bg-cover bg-center border border-border-dark" data-alt="User profile avatar gradient" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAKMLTdlZsO0EwFkGgqusAU6KR1mMw97o3UU6ZMr8dQBBOKffm5apm3c2s4X1wkI30SM1_f6E4mUejHE6j7dLpwMsz6lOgM8nAYrHFWI_2V7ikRhBcciU6I3RWO9jaXSW5ZZrJaI0OSZN15m3ctDRfjT1qJxyiUche9s3qlxeXgHGyRwSD9F0B0f7StL6hwAs0mm9_ONh4orkwJZ4CsxrC0Wx4WqGwKxC-Sw38PGulK1VHha2DHGtKA_5tRYsK2QXsywiUvE0ltQ');"></div>
+<div class="size-8 rounded-full bg-cover bg-center border border-border-dark" role="img" aria-label="User Profile" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAKMLTdlZsO0EwFkGgqusAU6KR1mMw97o3UU6ZMr8dQBBOKffm5apm3c2s4X1wkI30SM1_f6E4mUejHE6j7dLpwMsz6lOgM8nAYrHFWI_2V7ikRhBcciU6I3RWO9jaXSW5ZZrJaI0OSZN15m3ctDRfjT1qJxyiUche9s3qlxeXgHGyRwSD9F0B0f7StL6hwAs0mm9_ONh4orkwJZ4CsxrC0Wx4WqGwKxC-Sw38PGulK1VHha2DHGtKA_5tRYsK2QXsywiUvE0ltQ');"></div>
 </div>
 </div>
 </header>
@@ -93,7 +93,7 @@
 <h2 class="text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">The Hangar</h2>
 <div class="flex justify-between items-center">
 <p class="text-sm font-semibold text-gray-300">Hangar Participants</p>
-<button id="add-agent-button" class="text-primary hover:text-white transition-colors">
+<button id="add-agent-button" class="text-primary hover:text-white transition-colors" aria-label="Add Agent">
 <span class="material-symbols-outlined" style="font-size: 18px;">add_circle</span>
 </button>
 </div>
@@ -126,7 +126,7 @@
 <div id="autocomplete-popup" class="absolute bottom-full mb-2 w-full bg-surface-dark border border-border-dark rounded-lg shadow-lg z-30 hidden">
     <!-- Dynamic Content -->
 </div>
-<textarea id="user-input" class="w-full h-full bg-surface-darker border border-border-dark rounded-lg p-3 pr-24 font-mono text-sm text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary resize-none outline-none scrollbar-thin" placeholder="Enter system prompt or user query here..."></textarea>
+<textarea id="user-input" class="w-full h-full bg-surface-darker border border-border-dark rounded-lg p-3 pr-24 font-mono text-sm text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary resize-none outline-none scrollbar-thin" placeholder="Enter system prompt or user query here..." aria-label="User Input"></textarea>
 <div class="absolute bottom-3 right-3 flex items-center gap-2">
 <span class="text-[10px] text-gray-600 font-mono">0 chars</span>
 <button id="send-button" class="flex items-center gap-2 bg-primary hover:bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg shadow-primary/20 transition-all active:scale-95">
@@ -142,7 +142,7 @@
             <div class="p-4 border-b border-border-dark flex justify-between items-center">
                 <h2 class="text-xs font-mono uppercase tracking-widest text-gray-500">The Pipeline</h2>
                 <div class="flex gap-2">
-                    <button id="export-session-button" class="text-gray-500 hover:text-white transition-colors" title="Export Session">
+                    <button id="export-session-button" class="text-gray-500 hover:text-white transition-colors" title="Export Session" aria-label="Export Session">
                         <span class="material-symbols-outlined text-sm">download</span>
                     </button>
                     <span class="material-symbols-outlined text-gray-500 text-sm cursor-pointer hover:text-white">history</span>
@@ -154,7 +154,7 @@
 <span class="material-symbols-outlined text-sm">edit_note</span>
                         Context Scratchpad
                     </label>
-<textarea id="scratchpad" class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later..."></textarea>
+<textarea id="scratchpad" class="flex-1 w-full bg-surface-darker border border-border-dark rounded p-3 font-mono text-xs text-gray-300 resize-none focus:border-primary focus:ring-0 placeholder-gray-700" placeholder="Paste snippets here to pipe later..." aria-label="Context Scratchpad"></textarea>
 </div>
 <div class="h-px bg-border-dark w-full"></div>
 <!-- Pipe Actions -->
@@ -191,7 +191,7 @@
                 <span class="material-symbols-outlined text-primary">analytics</span>
                 Usage Analytics
             </h2>
-            <button id="close-analytics-button" class="text-gray-500 hover:text-white">&times;</button>
+            <button id="close-analytics-button" class="text-gray-500 hover:text-white" aria-label="Close Analytics">&times;</button>
         </div>
         <div id="analytics-container" class="p-6 max-h-[70vh] overflow-y-auto">
             <!-- Analytics content will be rendered here -->
@@ -207,7 +207,7 @@
     <div class="bg-surface-dark border border-border-dark rounded-lg shadow-2xl w-full max-w-md">
         <div class="p-4 border-b border-border-dark flex justify-between items-center">
             <h3 class="text-base font-semibold">Agent Catalog</h3>
-            <button id="close-catalog-button" class="text-gray-500 hover:text-white">
+            <button id="close-catalog-button" class="text-gray-500 hover:text-white" aria-label="Close Catalog">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
