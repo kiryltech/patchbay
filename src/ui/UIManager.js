@@ -40,7 +40,7 @@ export class UIManager {
         this.initializeAgentVisuals();
         this.bindEvents();
         this.renderAgentList();
-        this.renderPipeActions();
+        this.renderExternalAgents();
     }
 
     bindEvents() {
@@ -395,10 +395,11 @@ export class UIManager {
             const div = document.createElement('div');
             const visuals = this.agentVisuals.get(p.id);
             div.className = `group flex items-center justify-between p-2 rounded bg-surface-darker border border-border-dark hover:border-primary/40 transition-colors`;
+            const icon = p.mode === 'EXTERNAL' ? 'sync_alt' : visuals.icon;
             div.innerHTML = `
                 <div class="flex items-center gap-2">
                     <div class="size-7 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
-                        <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${visuals.icon}</span>
+                        <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">${icon}</span>
                     </div>
                     <span class="font-semibold text-sm text-gray-200">${p.name}</span>
                 </div>
@@ -412,6 +413,7 @@ export class UIManager {
                 const providerId = e.currentTarget.dataset.id;
                 this.orchestrator.removeParticipant(providerId);
                 this.renderAgentList();
+                this.renderExternalAgents();
             });
 
             listContainer.appendChild(div);
@@ -457,6 +459,7 @@ export class UIManager {
                 button.addEventListener('click', () => {
                     this.orchestrator.addParticipant(p.id);
                     this.renderAgentList();
+                    this.renderExternalAgents();
                     this.closeCatalog();
                 });
             }
@@ -464,28 +467,57 @@ export class UIManager {
         });
     }
 
-    renderPipeActions() {
+    renderExternalAgents() {
         this.pipeActionsContainer.innerHTML = '';
-        const providers = this.orchestrator.getProviders();
-        providers.forEach(p => {
-            const button = document.createElement('button');
-            const visuals = this.agentVisuals.get(p.id);
-            button.className = 'flex items-center justify-between p-2 rounded bg-surface-dark border border-border-dark hover:border-gray-500 hover:bg-[#2e2e33] transition-all group text-left';
-            button.innerHTML = `
-                <div class="flex flex-col">
-                    <span class="text-xs font-bold text-gray-200">Pipe to ${p.name}</span>
-                    <span class="text-[10px] text-gray-500">Sends scratchpad as User Msg</span>
+        const externalAgents = this.orchestrator.getActiveProviders().filter(p => p.mode === 'EXTERNAL');
+
+        if (externalAgents.length === 0) {
+            this.pipeActionsContainer.innerHTML = '<p class="text-xs text-gray-500 text-center p-4">No external agents active.</p>';
+            return;
+        }
+
+        externalAgents.forEach(agent => {
+            const visuals = this.agentVisuals.get(agent.id);
+            const container = document.createElement('div');
+            container.className = 'space-y-2 p-2 rounded bg-surface-darker border border-border-dark';
+
+            container.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="size-7 rounded border flex items-center justify-center shrink-0" style="border-color: ${visuals.color}60; background-color: ${visuals.color}10;">
+                        <span class="material-symbols-outlined text-sm" style="color: ${visuals.color};">sync_alt</span>
+                    </div>
+                    <span class="font-semibold text-sm text-gray-200">${agent.name}</span>
                 </div>
-                <span class="material-symbols-outlined text-gray-600 group-hover:text-primary" style="font-size: 18px; color: ${visuals.color};">arrow_forward</span>
+                <button class="w-full text-center bg-primary/20 text-primary hover:bg-primary/30 text-xs font-bold py-2 px-3 rounded transition-colors sync-button">
+                    Copy Delta Context
+                </button>
+                <textarea class="w-full bg-[#1e1e1e] border border-border-dark rounded p-2 text-xs" rows="3" placeholder="Paste response from ${agent.name} here..."></textarea>
+                <button class="w-full bg-gray-600 hover:bg-gray-500 text-white text-xs font-bold py-2 px-3 rounded transition-colors paste-button">
+                    Submit Response
+                </button>
             `;
-            button.addEventListener('click', () => {
-                const text = this.scratchpad.value.trim();
-                if (text) {
-                    this.inputElement.value = `@${p.name} ${text}`;
-                    this.handleSend();
+
+            const syncButton = container.querySelector('.sync-button');
+            const pasteButton = container.querySelector('.paste-button');
+            const textarea = container.querySelector('textarea');
+
+            syncButton.addEventListener('click', () => {
+                const context = agent.getDeltaContext(this.orchestrator.getConversationHistory());
+                navigator.clipboard.writeText(context);
+                syncButton.textContent = 'Copied!';
+                setTimeout(() => { syncButton.textContent = 'Copy Delta Context'; }, 2000);
+            });
+
+            pasteButton.addEventListener('click', () => {
+                const responseText = textarea.value.trim();
+                if (responseText) {
+                    agent.pasteResponse(responseText, this.orchestrator);
+                    this.appendMessage({ role: 'assistant', content: responseText, providerId: agent.id });
+                    textarea.value = '';
                 }
             });
-            this.pipeActionsContainer.appendChild(button);
+
+            this.pipeActionsContainer.appendChild(container);
         });
     }
 }
