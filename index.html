@@ -92,6 +92,9 @@
 <input class="bg-transparent border-none focus:ring-0 text-sm w-full text-slate-600 dark:text-slate-300" placeholder="Search mission logs..." type="text"/>
 </div>
 <div class="flex items-center gap-2">
+<button id="open-analytics-button" class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Analytics">
+<span class="material-symbols-outlined">bar_chart</span>
+</button>
 <button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
 <span class="material-symbols-outlined">notifications</span>
 </button>
@@ -107,7 +110,10 @@
 </div>
 <!-- Command Deck (Bottom Floating Input) -->
 <div class="px-8 pb-8 pt-2">
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto relative">
+<!-- Autocomplete Popup -->
+<div id="autocomplete-popup" class="hidden absolute bottom-full mb-2 left-0 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden z-50"></div>
+
 <div class="relative bg-white dark:bg-slate-800 rounded-xl p-2 border border-slate-200 dark:border-slate-700 custom-shadow flex flex-col gap-2">
 <textarea id="user-input" class="w-full bg-transparent border-none focus:ring-0 text-slate-700 dark:text-slate-200 text-sm resize-none px-4 py-3 placeholder:text-slate-400" placeholder="Command your agents..." rows="1"></textarea>
 <div class="flex items-center justify-between px-2 pb-1">
@@ -172,15 +178,20 @@
 </div>
 
 <!-- Analytics Modal -->
-<div id="analytics-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center">
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-4xl border border-slate-200 dark:border-slate-700">
-        <div class="p-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+<div id="analytics-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-4xl border border-slate-200 dark:border-slate-700 max-h-[85vh] flex flex-col">
+        <div class="p-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 shrink-0">
             <h3 class="text-lg font-bold text-slate-800 dark:text-white">Session Analytics</h3>
-            <button id="close-analytics-button" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
-                <span class="material-symbols-outlined text-slate-500">close</span>
-            </button>
+            <div class="flex items-center gap-2">
+                <button id="clear-analytics-button" class="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors" title="Clear Analytics">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+                <button id="close-analytics-button" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <span class="material-symbols-outlined text-slate-500">close</span>
+                </button>
+            </div>
         </div>
-        <div class="p-6">
+        <div class="p-6 overflow-y-auto">
             <div id="analytics-container" class="space-y-6">
                 <!-- Analytics content will be injected here -->
             </div>

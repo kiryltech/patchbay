@@ -16,25 +16,25 @@ export class SettingsUI {
         modal.id = 'settings-modal';
         modal.className = 'fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center';
         modal.innerHTML = `
-            <div class="bg-[#18181b] border border-border-dark rounded-lg p-6 w-96 shadow-2xl">
+            <div class="bg-white dark:bg-[#18181b] border border-slate-200 dark:border-slate-800 rounded-lg p-6 w-96 shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-white">Settings</h2>
-                    <button id="close-settings" class="text-gray-400 hover:text-white" aria-label="Close Settings">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white">Settings</h2>
+                    <button id="close-settings" class="text-slate-400 hover:text-slate-600 dark:hover:text-white" aria-label="Close Settings">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-mono text-gray-400 mb-1">OPENAI API KEY</label>
-                        <input type="password" id="openai-key" class="w-full bg-[#121212] border border-border-dark rounded p-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="sk-...">
+                        <label class="block text-xs font-mono text-slate-400 mb-1">OPENAI API KEY</label>
+                        <input type="password" id="openai-key" class="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-slate-800 rounded p-2 text-sm text-slate-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="sk-...">
                     </div>
                     <div>
-                        <label class="block text-xs font-mono text-gray-400 mb-1">GEMINI API KEY</label>
-                        <input type="password" id="gemini-key" class="w-full bg-[#121212] border border-border-dark rounded p-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="AIza...">
+                        <label class="block text-xs font-mono text-slate-400 mb-1">GEMINI API KEY</label>
+                        <input type="password" id="gemini-key" class="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-slate-800 rounded p-2 text-sm text-slate-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="AIza...">
                     </div>
                     <div>
-                        <label class="block text-xs font-mono text-gray-400 mb-1">ANTHROPIC API KEY</label>
-                        <input type="password" id="anthropic-key" class="w-full bg-[#121212] border border-border-dark rounded p-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="sk-ant-...">
+                        <label class="block text-xs font-mono text-slate-400 mb-1">ANTHROPIC API KEY</label>
+                        <input type="password" id="anthropic-key" class="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-slate-800 rounded p-2 text-sm text-slate-700 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="sk-ant-...">
                     </div>
                     <button id="save-settings" class="w-full bg-primary hover:bg-blue-500 text-white font-bold py-2 rounded transition-colors">
                         Save Keys

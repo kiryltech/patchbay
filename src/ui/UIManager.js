@@ -18,6 +18,8 @@ export class UIManager {
         this.closeCatalogButton = document.getElementById('close-catalog-button');
         this.agentCatalogList = document.getElementById('agent-catalog-list');
         this.settingsButton = document.getElementById('settings-button');
+        this.analyticsButton = document.getElementById('open-analytics-button');
+        this.autocompletePopup = document.getElementById('autocomplete-popup');
 
         this.agentVisuals = new Map();
         this.typingIndicators = new Map();
@@ -50,6 +52,10 @@ export class UIManager {
 
         this.addAgentButton.addEventListener('click', () => this.openCatalog());
         this.closeCatalogButton.addEventListener('click', () => this.closeCatalog());
+        
+        if (this.analyticsButton) {
+            this.analyticsButton.addEventListener('click', () => this.analyticsUI.open());
+        }
     }
 
     exportSession() {
@@ -205,7 +211,7 @@ export class UIManager {
         suggestions.forEach((suggestion, index) => {
             const item = document.createElement('div');
             const isSelected = index === this.selectedIndex;
-            item.className = `px-4 py-2 cursor-pointer flex items-center gap-2 transition-colors ${isSelected ? 'bg-primary/20 text-white' : 'hover:bg-[#27272a] text-gray-200'}`;
+            item.className = `px-4 py-2 cursor-pointer flex items-center gap-2 transition-colors ${isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200'}`;
             
             let icon = 'alternate_email';
             let color = '#9ca3af'; // gray-400
@@ -247,19 +253,40 @@ export class UIManager {
     }
 
     showTypingIndicator(providerId) {
-        const agentInList = document.querySelector(`[data-id="${providerId}"]`);
-        if (agentInList && !agentInList.querySelector('.typing-indicator')) {
-            const indicator = document.createElement('span');
-            indicator.className = 'typing-indicator ml-auto size-2 rounded-full bg-primary animate-pulse';
-            agentInList.appendChild(indicator);
-        }
+        if (this.typingIndicators.has(providerId)) return;
+
+        const provider = this.orchestrator.providers.get(providerId);
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'flex gap-4 group';
+        typingDiv.innerHTML = `
+            <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+                <span class="material-symbols-outlined">${this.agentVisuals.get(providerId)?.icon || 'smart_toy'}</span>
+            </div>
+            <div class="flex flex-col gap-1.5 max-w-[85%]">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-200">${provider.name}</span>
+                    <span class="text-[10px] text-slate-400 font-medium">Thinking...</span>
+                </div>
+                <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-xl rounded-tl-none custom-shadow">
+                     <div class="flex gap-1 h-6 items-center px-2">
+                        <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
+                        <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100"></span>
+                        <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200"></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.messageContainer.appendChild(typingDiv);
+        this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+        this.typingIndicators.set(providerId, typingDiv);
     }
 
     removeTypingIndicator(providerId) {
-        const agentInList = document.querySelector(`[data-id="${providerId}"]`);
-        const indicator = agentInList ? agentInList.querySelector('.typing-indicator') : null;
+        const indicator = this.typingIndicators.get(providerId);
         if (indicator) {
             indicator.remove();
+            this.typingIndicators.delete(providerId);
         }
     }
 
@@ -344,7 +371,8 @@ export class UIManager {
             const link = document.createElement('a');
             link.href = '#';
             const isActive = index === 0; // Assuming the first agent is active for now
-            link.className = `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`;
+            link.className = `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`;
+            link.dataset.id = p.id;
 
             const visuals = this.agentVisuals.get(p.id);
             const icon = p.mode === 'EXTERNAL' ? 'sync_alt' : (visuals?.icon || 'smart_toy');

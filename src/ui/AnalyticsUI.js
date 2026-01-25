@@ -46,42 +46,42 @@ export class AnalyticsUI {
             </div>
             <div class="space-y-4">
                 ${Object.entries(analytics.agents).map(([agentId, agentData]) => `
-                    <div class="bg-surface-darker p-3 rounded-lg border border-border-dark">
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                         <div class="flex justify-between items-center">
-                            <h4 class="font-semibold text-gray-200">${agentId}</h4>
-                            <span class="text-xs font-mono text-gray-400">${agentData.requests} reqs</span>
+                            <h4 class="font-semibold text-slate-700 dark:text-slate-200">${agentId}</h4>
+                            <span class="text-xs font-mono text-slate-400">${agentData.requests} reqs</span>
                         </div>
                         <div class="grid grid-cols-2 gap-4 mt-3 text-xs">
                             <div>
-                                <p class="text-gray-400 font-mono">TOKENS</p>
+                                <p class="text-slate-400 font-mono">TOKENS</p>
                                 <div class="flex justify-between items-center mt-1">
-                                    <span class="text-gray-500">Input</span>
-                                    <span class="font-mono text-gray-300">${agentData.inputTokens.toLocaleString()}</span>
+                                    <span class="text-slate-500">Input</span>
+                                    <span class="font-mono text-slate-600 dark:text-slate-300">${agentData.inputTokens.toLocaleString()}</span>
                                 </div>
                                 <div class="flex justify-between items-center mt-1">
-                                    <span class="text-gray-500">Output</span>
-                                    <span class="font-mono text-gray-300">${agentData.outputTokens.toLocaleString()}</span>
+                                    <span class="text-slate-500">Output</span>
+                                    <span class="font-mono text-slate-600 dark:text-slate-300">${agentData.outputTokens.toLocaleString()}</span>
                                 </div>
-                                 <div class="border-t border-border-dark my-1"></div>
+                                 <div class="border-t border-slate-200 dark:border-slate-800 my-1"></div>
                                 <div class="flex justify-between items-center font-bold">
-                                    <span class="text-gray-400">Total</span>
-                                    <span class="font-mono text-gray-200">${agentData.totalTokens.toLocaleString()}</span>
+                                    <span class="text-slate-400">Total</span>
+                                    <span class="font-mono text-slate-700 dark:text-slate-200">${agentData.totalTokens.toLocaleString()}</span>
                                 </div>
                             </div>
                             <div>
-                                <p class="text-gray-400 font-mono">EST. COST</p>
+                                <p class="text-slate-400 font-mono">EST. COST</p>
                                 <div class="flex justify-between items-center mt-1">
-                                    <span class="text-gray-500">Input</span>
-                                    <span class="font-mono text-gray-300">$${(agentData.inputCost || 0).toFixed(4)}</span>
+                                    <span class="text-slate-500">Input</span>
+                                    <span class="font-mono text-slate-600 dark:text-slate-300">$${(agentData.inputCost || 0).toFixed(4)}</span>
                                 </div>
                                 <div class="flex justify-between items-center mt-1">
-                                    <span class="text-gray-500">Output</span>
-                                    <span class="font-mono text-gray-300">$${(agentData.outputCost || 0).toFixed(4)}</span>
+                                    <span class="text-slate-500">Output</span>
+                                    <span class="font-mono text-slate-600 dark:text-slate-300">$${(agentData.outputCost || 0).toFixed(4)}</span>
                                 </div>
-                                <div class="border-t border-border-dark my-1"></div>
+                                <div class="border-t border-slate-200 dark:border-slate-800 my-1"></div>
                                 <div class="flex justify-between items-center font-bold">
-                                    <span class="text-gray-400">Total</span>
-                                    <span class="font-mono text-gray-200">$${agentData.estimatedCost.toFixed(4)}</span>
+                                    <span class="text-slate-400">Total</span>
+                                    <span class="font-mono text-slate-700 dark:text-slate-200">$${agentData.estimatedCost.toFixed(4)}</span>
                                 </div>
                             </div>
                         </div>
