@@ -40,6 +40,7 @@ export class UIManager {
         this.bindEvents();
         this.renderAgentList();
         this.renderExternalAgents();
+        this.updateCostEstimate();
     }
 
     bindEvents() {
@@ -48,13 +49,77 @@ export class UIManager {
         // Keydown for navigation and sending
         this.inputElement.addEventListener('keydown', (e) => this.handleKeydown(e));
 
-        this.inputElement.addEventListener('input', () => this.handleAutocomplete());
+        this.inputElement.addEventListener('input', () => {
+            this.handleAutocomplete();
+            this.updateCostEstimate();
+        });
 
         this.addAgentButton.addEventListener('click', () => this.openCatalog());
         this.closeCatalogButton.addEventListener('click', () => this.closeCatalog());
         
         if (this.analyticsButton) {
             this.analyticsButton.addEventListener('click', () => this.analyticsUI.open());
+        }
+    }
+
+    estimateTokens(text) {
+        return Math.ceil((text || '').length / 4);
+    }
+
+    updateCostEstimate() {
+        const rawText = this.inputElement.value;
+        const { targets } = this.parseInput(rawText);
+        
+        let targetProviders = [];
+        if (targets.includes('@all') || targets.includes('@everyone')) {
+            targetProviders = this.orchestrator.getActiveProviders();
+        } else if (targets.length > 0) {
+            targetProviders = this.orchestrator.getProviders().filter(p => {
+                const pNameNormalized = p.name.toLowerCase().replace(/\s+/g, '');
+                return targets.some(t => {
+                    const targetNameNormalized = t.substring(1).toLowerCase().replace(/\s+/g, '');
+                    return pNameNormalized.includes(targetNameNormalized) || targetNameNormalized.includes(pNameNormalized);
+                });
+            });
+        }
+        
+        // Filter out external agents for cost calculation as they don't have API pricing
+        targetProviders = targetProviders.filter(p => p.mode !== 'EXTERNAL');
+
+        if (targetProviders.length === 0) {
+            const countEl = document.getElementById('token-count');
+            if (countEl) {
+                countEl.textContent = 'Est. Cost: $0.0000';
+                countEl.title = 'No active agents targeted';
+                countEl.className = 'text-[11px] font-medium text-slate-400';
+            }
+            return;
+        }
+
+        const history = this.orchestrator.getConversationHistory();
+        const historyText = history.map(m => m.content).join(' ');
+        const totalInputText = historyText + ' ' + rawText;
+        const inputTokens = this.estimateTokens(totalInputText);
+        const estimatedOutputTokens = 500; // Guestimate
+
+        let totalCost = 0;
+        let breakdown = [];
+
+        targetProviders.forEach(p => {
+            if (!p.pricing) return;
+            const inputCost = (inputTokens / 1_000_000) * p.pricing.input;
+            const outputCost = (estimatedOutputTokens / 1_000_000) * p.pricing.output;
+            const agentTotal = inputCost + outputCost;
+            totalCost += agentTotal;
+            
+            breakdown.push(`${p.name}: $${agentTotal.toFixed(4)} (In: ${inputTokens}, Out: ~${estimatedOutputTokens})`);
+        });
+
+        const countEl = document.getElementById('token-count');
+        if (countEl) {
+            countEl.textContent = `Est. Cost: $${totalCost.toFixed(4)}`;
+            countEl.title = breakdown.join('\n');
+            countEl.className = 'text-[11px] font-medium text-emerald-600 dark:text-emerald-400 cursor-help';
         }
     }
 
@@ -116,6 +181,24 @@ export class UIManager {
         });
     }
 
+    getTargetProviders(text) {
+        const { targets } = this.parseInput(text);
+        if (targets.includes('@all') || targets.includes('@everyone')) {
+            return this.orchestrator.getActiveProviders();
+        }
+        if (targets.length === 0) return [];
+        
+        const allProviders = this.orchestrator.getProviders();
+        return allProviders.filter(p => {
+            const pNameNormalized = p.name.toLowerCase().replace(/\s+/g, '');
+            return targets.some(t => {
+                const targetNameNormalized = t.substring(1).toLowerCase().replace(/\s+/g, '');
+                // Use startsWith for safer matching
+                return targetNameNormalized.length > 0 && pNameNormalized.startsWith(targetNameNormalized);
+            });
+        });
+    }
+
     async handleSend() {
         const rawText = this.inputElement.value;
         if (!rawText.trim()) return;
@@ -123,38 +206,28 @@ export class UIManager {
         this.appendMessage({ role: 'user', content: rawText, providerId: 'user' });
         this.inputElement.value = '';
 
-        const { targets, cleanText } = this.parseInput(rawText);
-        let targetIds = [];
-
-        if (targets.includes('@all') || targets.includes('@everyone')) {
-            targetIds = this.orchestrator.getActiveProviders().map(p => p.id);
-        } else if (targets.length > 0) {
-            // Robust matching: Check if normalized provider name contains the normalized target
-            targetIds = this.orchestrator.getProviders()
-                .filter(p => {
-                    const pNameNormalized = p.name.toLowerCase().replace(/\s+/g, '');
-                    return targets.some(t => {
-                        const targetNameNormalized = t.substring(1).toLowerCase().replace(/\s+/g, ''); // remove @ and spaces
-                        return pNameNormalized.includes(targetNameNormalized) || targetNameNormalized.includes(pNameNormalized);
-                    });
-                })
-                .map(p => p.id);
-        }
+        const { cleanText } = this.parseInput(rawText);
+        const targetProviders = this.getTargetProviders(rawText);
+        const targetIds = targetProviders.map(p => p.id);
         
-        // "Passive by Default" - if targetIds is empty, dispatch will just save to history.
-        
-        // Show typing indicators for all targeted agents
-        targetIds.forEach(id => this.showTypingIndicator(id));
+        // Show typing indicators only for non-external agents
+        targetProviders
+            .filter(p => p.mode !== 'EXTERNAL')
+            .forEach(p => this.showTypingIndicator(p.id));
 
         // Dispatch the prompt
-        await this.orchestrator.dispatch(cleanText, targetIds, (result) => {
+        const dispatchPromise = this.orchestrator.dispatch(cleanText, targetIds, (result) => {
             this.removeTypingIndicator(result.providerId);
             if (result.error) {
                 this.appendMessage({ role: 'system', content: `Error from ${result.providerId}: ${result.error.message}` });
             } else {
                 this.appendMessage({ role: 'assistant', content: result.response, providerId: result.providerId });
             }
+            this.updateCostEstimate();
         }, rawText); // Pass raw text for history
+        
+        this.updateCostEstimate();
+        await dispatchPromise;
     }
 
     parseInput(text) {
@@ -454,32 +527,89 @@ export class UIManager {
     renderExternalAgents() {
         this.pipeActionsContainer.innerHTML = ''; // Clear content
 
-        // Static content based on the design
-        this.pipeActionsContainer.innerHTML = `
-            <div class.space-y-8">
-                <!-- Status Toggles -->
-                <div class="space-y-4">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Connections</p>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary">link</span>
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">API Gateway</span>
-                        </div>
-                        <div class="h-5 w-9 bg-primary/20 rounded-full relative p-0.5">
-                            <div class="size-4 bg-primary rounded-full translate-x-4"></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-slate-400">database</span>
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Memory Sync</span>
-                        </div>
-                        <div class="h-5 w-9 bg-slate-200 dark:bg-slate-700 rounded-full relative p-0.5">
-                            <div class="size-4 bg-white rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
+        // 1. External Agents Section
+        const externalAgents = this.orchestrator.getProviders().filter(p => p.mode === 'EXTERNAL');
+        
+        if (externalAgents.length > 0) {
+            const agentsContainer = document.createElement('div');
+            agentsContainer.className = 'space-y-4 mb-8';
+            agentsContainer.innerHTML = `<p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">External Agents</p>`;
+            
+            externalAgents.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3 shadow-sm';
+                
+                // Header
+                const header = document.createElement('div');
+                header.className = 'flex items-center justify-between';
+                header.innerHTML = `
+                     <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">link</span>
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">${agent.name}</span>
+                     </div>
+                     <span class="text-[10px] font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">READY</span>
+                `;
+                card.appendChild(header);
 
+                // Sync Button
+                const syncBtn = document.createElement('button');
+                syncBtn.className = 'w-full flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors';
+                syncBtn.innerHTML = `<span class="material-symbols-outlined text-sm">content_copy</span> Copy Context (Sync)`;
+                syncBtn.onclick = () => {
+                    const delta = agent.getDeltaContext(this.orchestrator.getConversationHistory());
+                    navigator.clipboard.writeText(delta).then(() => {
+                        const originalText = syncBtn.innerHTML;
+                        syncBtn.innerHTML = `<span class="material-symbols-outlined text-sm">check</span> Copied!`;
+                        syncBtn.classList.add('text-emerald-500');
+                        setTimeout(() => {
+                            syncBtn.innerHTML = originalText;
+                            syncBtn.classList.remove('text-emerald-500');
+                        }, 2000);
+                    });
+                };
+                card.appendChild(syncBtn);
+
+                // Paste Area
+                const pasteContainer = document.createElement('div');
+                pasteContainer.className = 'space-y-2';
+                
+                const textarea = document.createElement('textarea');
+                textarea.className = 'w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-primary outline-none resize-none placeholder:text-slate-400';
+                textarea.rows = 2;
+                textarea.placeholder = 'Paste response here...';
+                
+                const injectBtn = document.createElement('button');
+                injectBtn.className = 'w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition-colors';
+                injectBtn.innerHTML = `<span class="material-symbols-outlined text-sm">input</span> Inject Response`;
+                injectBtn.onclick = () => {
+                    const text = textarea.value;
+                    if (text.trim()) {
+                        agent.pasteResponse(text, this.orchestrator);
+                        textarea.value = '';
+                        // Refresh UI to show new message
+                        this.appendMessage({
+                            role: 'assistant',
+                            content: text,
+                            providerId: agent.id
+                        });
+                        this.updateCostEstimate();
+                    }
+                };
+
+                pasteContainer.appendChild(textarea);
+                pasteContainer.appendChild(injectBtn);
+                card.appendChild(pasteContainer);
+
+                agentsContainer.appendChild(card);
+            });
+            
+            this.pipeActionsContainer.appendChild(agentsContainer);
+        }
+
+        // 2. Static Content (Manage Session & Network Health)
+        const staticContent = document.createElement('div');
+        staticContent.innerHTML = `
+            <div class="space-y-8">
                 <!-- Export Options -->
                 <div class="space-y-4">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Manage Session</p>
@@ -512,6 +642,7 @@ export class UIManager {
                 </div>
             </div>
         `;
+        this.pipeActionsContainer.appendChild(staticContent);
 
         // Re-bind the export session button event
         const exportButton = document.getElementById('export-session-button');

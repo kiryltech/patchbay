@@ -119,7 +119,7 @@ orchestrator.registerProvider(claude45Opus);
 
 const claudeWeb = new ExternalAdapter({
     id: 'claude-web',
-    name: 'Claude (WebUI)',
+    name: 'External AI',
 });
 orchestrator.registerProvider(claudeWeb);
 
